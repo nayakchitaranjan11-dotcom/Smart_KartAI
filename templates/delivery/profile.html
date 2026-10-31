@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Delivery Partner Profile - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="sk-logo-icon bg-primary" style="width: 54px; height: 54px; font-size: 1.6rem;">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0">{{ user.get_full_name|default:user.username }}</h4>
+                        <span class="text-muted small">Registered Delivery Personnel &bull; ⭐ {{ profile.rating }}</span>
+                    </div>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Contact Phone Number</label>
+                        <input type="text" name="phone" class="form-control" value="{{ profile.phone }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Vehicle Type</label>
+                        <input type="text" name="vehicle_type" class="form-control" value="{{ profile.vehicle_type }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Vehicle Plate / Registration Number</label>
+                        <input type="text" name="vehicle_number" class="form-control" value="{{ profile.vehicle_number }}">
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" name="is_available" id="availSwitch" {% if profile.is_available %}checked{% endif %}>
+                            <label class="form-check-label small fw-semibold" for="availSwitch">
+                                Available for New Store Delivery Assignments (On Duty)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <a href="{% url 'delivery:dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                        <button type="submit" class="btn btn-sk-primary rounded-pill px-4 fw-bold">Save Settings</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

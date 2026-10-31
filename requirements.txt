@@ -1,0 +1,7 @@
+Django>=5.0,<6.2
+Pillow>=10.0.0
+reportlab>=4.0.0
+pytesseract>=0.3.10
+# Optional (NOT needed by the website): only for the standalone script apps/accounts/performance_auditor.py
+# matplotlib>=3.8
+# Tkinter desktop console uses Python's built-in tkinter module - nothing extra to install.

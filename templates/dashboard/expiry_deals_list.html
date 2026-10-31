@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Expiry Rescue Deals - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-fire text-danger me-2"></i>Expiry Rescue Deals Management</h3>
+            <p class="text-muted small mb-0">Publish discounted near-expiry inventory deals to prevent food waste</p>
+        </div>
+        <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            &larr; Admin Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+        
+        <!-- Left: Create Rescue Deal Form -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-plus-circle text-danger me-2"></i>Mark Product as Rescue Deal</h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Select Perishable Product <span class="text-danger">*</span></label>
+                        <select name="product_id" class="form-select form-select-sm" required>
+                            <option value="">Choose item...</option>
+                            {% for p in products %}
+                            <option value="{{ p.id }}">{{ p.name }} (Exp: {{ p.expiry_date|date:"d M"|default:"No Date" }}, MRP: ₹{{ p.original_price }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Rescue Discount Percentage (%) <span class="text-danger">*</span></label>
+                        <input type="number" name="discount_percent" class="form-control form-control-sm" value="50" min="20" max="90" required>
+                        <div class="form-text small">Standard near-expiry discounts range from 30% to 70%.</div>
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100 rounded-pill py-2 fw-bold">
+                        Activate Rescue Deal
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right: Active Rescue Deals Table -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-muted text-uppercase">
+                            <tr>
+                                <th>Product Item</th>
+                                <th>Original / Rescue Price</th>
+                                <th>Discount</th>
+                                <th>Expiry Date</th>
+                                <th>Rescued</th>
+                                <th>Status</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for deal in deals %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark small">{{ deal.product.name }}</div>
+                                    <span class="text-muted" style="font-size: 0.72rem;">Stock: {{ deal.product.stock_quantity }} units</span>
+                                </td>
+                                <td class="small">
+                                    <span class="text-decoration-line-through text-muted">₹{{ deal.product.original_price }}</span>
+                                    <b class="text-danger ms-1">₹{{ deal.rescue_price }}</b>
+                                </td>
+                                <td>
+                                    <span class="badge bg-danger">{{ deal.rescue_discount_percent }}% OFF</span>
+                                </td>
+                                <td class="small">
+                                    <span class="badge bg-{{ deal.urgency_level }} text-white">
+                                        {{ deal.expiry_date|date:"d M Y" }} ({{ deal.days_remaining }}d)
+                                    </span>
+                                </td>
+                                <td class="small fw-semibold text-success">{{ deal.rescued_count }} Units</td>
+                                <td>
+                                    {% if deal.is_currently_active %}
+                                        <span class="badge bg-success">Active Deal</span>
+                                    {% elif not deal.is_active %}
+                                        <span class="badge bg-secondary">Deactivated</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Expired / Sold Out</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <form action="{% url 'dashboard:expiry_deal_toggle' deal.id %}" method="POST" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm {% if deal.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-3" style="font-size: 0.72rem;">
+                                            {% if deal.is_active %}Deactivate{% else %}Re-activate{% endif %}
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">No active expiry rescue deals configured.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

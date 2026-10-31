@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Grocery List Scanner - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header Banner -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5 mb-4 text-white" style="background: linear-gradient(135deg, #064E3B 0%, #0F5132 50%, #047857 100%);">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold mb-2">
+                    <i class="bi bi-magic me-1"></i> Innovative Feature #1
+                </span>
+                <h2 class="display-6 fw-bold mb-2">AI Grocery List Scanner</h2>
+                <p class="text-white-50 lead mb-0" style="font-size: 1.05rem;">
+                    Upload an image of your handwritten or printed grocery list. Our AI preprocessing &amp; fuzzy token matching engine extracts quantities and maps them directly to in-stock store inventory!
+                </p>
+            </div>
+            <div class="col-lg-4 text-end d-none d-lg-block">
+                <i class="bi bi-camera-fill display-1 text-white opacity-25"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- OCR Status Disclaimer -->
+    <div class="alert alert-info border-info shadow-sm rounded-4 p-3 mb-4 d-flex align-items-center gap-3">
+        <i class="bi bi-info-circle-fill fs-3 text-info"></i>
+        <div class="small">
+            <b>OCR &amp; Intelligent Parsing Notice:</b> If Tesseract OCR is not installed locally on your system, SmartKart AI provides a seamless manual text fallback. You can paste or type your list directly (e.g. <i>"Milk 2 packets, Rice 5 kg, Sugar 1 kg"</i>) to run the exact same product-matching algorithm.
+        </div>
+    </div>
+
+    <div class="row g-4">
+        
+        <!-- Left: Upload Image Form -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
+                <h5 class="fw-bold mb-3"><i class="bi bi-upload text-success me-2"></i>Option A: Upload List Image</h5>
+                <p class="text-muted small mb-4">Select a photo of your paper shopping list (JPG, JPEG, PNG, WEBP).</p>
+
+                <form method="POST" enctype="multipart/form-data" action="{% url 'smart_features:scanner' %}">
+                    {% csrf_token %}
+                    
+                    <div class="border-2 border-dashed p-4 rounded-4 text-center mb-4 bg-light" style="border: 2px dashed #CBD5E1;">
+                        <i class="bi bi-cloud-arrow-up-fill display-4 text-success mb-2"></i>
+                        <h6 class="fw-bold text-dark mb-1">Choose Grocery List Image</h6>
+                        <p class="text-muted small mb-3">Supported formats: JPG, PNG, WEBP (Max 5MB)</p>
+                        <input type="file" name="grocery_image" class="form-control" accept="image/*" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-sk-primary w-100 py-3 rounded-pill fw-bold">
+                        <i class="bi bi-magic me-1"></i> Scan &amp; Match Products
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right: Manual Text / Paste Fallback -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
+                <h5 class="fw-bold mb-3"><i class="bi bi-pencil-square text-primary me-2"></i>Option B: Quick Text Entry</h5>
+                <p class="text-muted small mb-3">Type or paste your shopping list with one grocery item per line:</p>
+
+                <form method="POST" action="{% url 'smart_features:scanner' %}">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <textarea name="manual_text" class="form-control font-monospace" rows="6" placeholder="Example:&#10;Full Cream Milk 2 packets&#10;Basmati Rice 5 kg&#10;Tata Salt 1 kg&#10;Amul Butter 500 g&#10;Atta 10 kg&#10;Farm Fresh Eggs 1 dozen" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-sk-secondary w-100 py-3 rounded-pill fw-bold">
+                        <i class="bi bi-cpu me-1"></i> Parse Text &amp; Match Inventory
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- How AI Scanner Works Guide -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 mt-4">
+        <h6 class="fw-bold mb-3"><i class="bi bi-lightbulb-fill text-warning me-2"></i>How the SmartKart AI Scanner Works:</h6>
+        <div class="row g-3 text-secondary small">
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded-3">
+                    <b class="text-dark d-block mb-1">1. Preprocessing</b>
+                    Pillow enhances image contrast, applies grayscale &amp; thresholding.
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded-3">
+                    <b class="text-dark d-block mb-1">2. OCR Extraction</b>
+                    Extracts raw textual strings from lines using Tesseract or manual input.
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded-3">
+                    <b class="text-dark d-block mb-1">3. Token &amp; Qty Parsing</b>
+                    Regex extracts quantities and units (e.g. <i>"5 kg"</i>, <i>"2 packets"</i>).
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 bg-light rounded-3">
+                    <b class="text-dark d-block mb-1">4. Fuzzy Catalogue Match</b>
+                    Matches store products with confidence score % and substitute fallbacks.
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

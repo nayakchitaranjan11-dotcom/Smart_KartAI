@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}Delivery Order #{{ order.order_number }} - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'delivery:dashboard' %}">Delivery Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">#{{ order.order_number }}</li>
+                </ol>
+            </nav>
+            <h3 class="fw-bold mb-0">Delivery Checklist &amp; Navigation</h3>
+        </div>
+        <a href="{% url 'delivery:dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            &larr; Back to Queue
+        </a>
+    </div>
+
+    <div class="row g-4">
+        
+        <!-- Left: Order Items Checklist -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-box-seam text-primary me-2"></i>Items Verification Checklist</h5>
+                <p class="text-muted small mb-3">Ensure all packaged grocery items are intact before handing over:</p>
+
+                <div class="list-group list-group-flush">
+                    {% for item in order.items.all %}
+                    <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-bold text-dark small d-block">{{ item.quantity }}x {{ item.product_name }}</span>
+                            <span class="text-muted" style="font-size: 0.75rem;">Pack: {{ item.product_unit }}</span>
+                        </div>
+                        <span class="badge bg-light text-dark border">₹{{ item.total_price }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="border-top pt-3 mt-3 d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-dark">Order Grand Total</span>
+                    <span class="fw-bold fs-5 text-dark">₹{{ order.grand_total }}</span>
+                </div>
+            </div>
+
+            <!-- Notes from Customer -->
+            {% if order.order_notes %}
+            <div class="card shadow-sm border-0 rounded-4 p-4 mb-4 bg-light">
+                <h6 class="fw-bold text-dark mb-1"><i class="bi bi-chat-text text-warning me-1"></i>Customer Delivery Instructions:</h6>
+                <p class="mb-0 text-secondary small">{{ order.order_notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right: Status Update & Customer Destination -->
+        <div class="col-lg-5">
+            
+            <!-- Route preview (added) -->
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+                <div class="sk-track-map">
+                    <div class="sk-eta-chip">
+                        {% if order.payment_method == 'COD' and order.payment_status != 'PAID' %}
+                            <i class="bi bi-cash-coin text-warning"></i> Collect <b>₹{{ order.grand_total }}</b> cash
+                        {% else %}
+                            <i class="bi bi-check-circle-fill text-success"></i> Prepaid &bull; no cash to collect
+                        {% endif %}
+                    </div>
+                    <svg viewBox="0 0 400 230" preserveAspectRatio="xMidYMid meet" aria-label="Delivery route preview">
+                        <path class="sk-track-route-bg" d="M 50 180 C 120 180, 120 70, 200 95 S 300 160, 350 55"/>
+                        <path id="skRoute" class="sk-track-route" d="M 50 180 C 120 180, 120 70, 200 95 S 300 160, 350 55"/>
+                        <g transform="translate(50 180)"><circle r="20" fill="#0F5132"/><text text-anchor="middle" dy="7" font-size="20">🏪</text></g>
+                        <g transform="translate(350 55)"><circle r="20" fill="#EA580C"/><text text-anchor="middle" dy="7" font-size="20">🏠</text></g>
+                        <g id="skRider" transform="translate(50 180)"><circle r="17" fill="#fff" stroke="#10B981" stroke-width="3"/><text text-anchor="middle" dy="6" font-size="17">🛵</text></g>
+                    </svg>
+                    <div class="d-flex justify-content-between align-items-center px-3 pb-2 small gap-2">
+                        <span class="text-muted">Dark Store &rarr; {{ order.shipping_postal_code }}</span>
+                        <a class="btn btn-sm btn-outline-primary rounded-pill" target="_blank" rel="noopener"
+                           href="https://www.google.com/maps/search/?api=1&query={{ order.shipping_street|urlencode }}%2C+{{ order.shipping_city|urlencode }}+{{ order.shipping_postal_code|urlencode }}">
+                            <i class="bi bi-sign-turn-right"></i> Open in Maps
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <script>
+            (function () {
+                const route = document.getElementById('skRoute'), rider = document.getElementById('skRider');
+                const p = {{ order.progress_percent }} / 100, total = route.getTotalLength();
+                route.style.strokeDasharray = total; route.style.strokeDashoffset = total * (1 - p);
+                const pt = route.getPointAtLength(total * p);
+                rider.setAttribute('transform', `translate(${pt.x} ${pt.y})`);
+            })();
+            </script>
+
+            <!-- Customer Destination Card -->
+            <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Customer Destination</h5>
+                <div class="text-secondary small mb-3">
+                    <div class="fw-bold text-dark fs-6 mb-1">{{ order.shipping_full_name }}</div>
+                    <div>{{ order.shipping_street }}</div>
+                    {% if order.shipping_landmark %}<div>Landmark: <b>{{ order.shipping_landmark }}</b></div>{% endif %}
+                    <div>{{ order.shipping_city }}, {{ order.shipping_state }} - <b>{{ order.shipping_postal_code }}</b></div>
+                </div>
+
+                <a href="tel:{{ order.shipping_phone }}" class="btn btn-outline-success w-100 rounded-pill fw-bold py-2 mb-2">
+                    <i class="bi bi-telephone-fill me-1"></i> Call Customer ({{ order.shipping_phone }})
+                </a>
+            </div>
+
+            <!-- Status Transition Card -->
+            <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-arrow-repeat text-success me-2"></i>Update Order Stage</h5>
+                <div class="mb-3">
+                    <span class="text-muted small">Current Stage: </span>
+                    <span class="badge bg-primary fs-6">{{ order.get_status_display }}</span>
+                </div>
+
+                <form method="POST" action="{% url 'delivery:update_status' order.order_number %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Next Stage</label>
+                        <select name="status" class="form-select" required>
+                            {% if order.status == 'ASSIGNED' or order.status == 'READY_FOR_PICKUP' %}
+                                <option value="PICKED_UP">Picked Up from Hub</option>
+                            {% elif order.status == 'PICKED_UP' %}
+                                <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+                            {% elif order.status == 'OUT_FOR_DELIVERY' %}
+                                <option value="DELIVERED">Delivered to Doorstep</option>
+                            {% else %}
+                                <option value="">No further stage</option>
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Delivery Log Comment (optional)</label>
+                        <input type="text" name="comment" class="form-control form-control-sm" placeholder="e.g. Handed over at doorstep">
+                    </div>
+
+                    <button type="submit" class="btn btn-sk-primary w-100 rounded-pill py-2 fw-bold">
+                        Confirm Status Update
+                    </button>
+                </form>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

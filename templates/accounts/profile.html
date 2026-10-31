@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row g-4">
+        
+        <!-- Profile Navigation Sidebar -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 p-4 text-center mb-4">
+                <div class="mb-3">
+                    <div class="sk-logo-icon mx-auto" style="width: 72px; height: 72px; font-size: 2.2rem; border-radius: 50%;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                </div>
+                <h5 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h5>
+                <div class="text-muted small mb-2">{{ user.email }}</div>
+                <span class="badge bg-success-subtle text-success border border-success-subtle mx-auto px-3 py-1">{{ user_role }}</span>
+
+                <hr class="my-3">
+
+                <div class="d-grid gap-2 text-start">
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-light active fw-semibold text-start"><i class="bi bi-person me-2"></i> Profile Details</a>
+                    <a href="{% url 'orders:order_history' %}" class="btn btn-light fw-semibold text-start"><i class="bi bi-bag-check me-2"></i> My Orders</a>
+                    <a href="{% url 'smart_features:budget_dashboard' %}" class="btn btn-light fw-semibold text-start"><i class="bi bi-wallet2 me-2"></i> Budget Dashboard</a>
+                    <a href="{% url 'accounts:address_list' %}" class="btn btn-light fw-semibold text-start"><i class="bi bi-geo-alt me-2"></i> Saved Addresses</a>
+                    <a href="{% url 'cart:wishlist' %}" class="btn btn-light fw-semibold text-start"><i class="bi bi-heart me-2"></i> My Wishlist</a>
+                    <a href="{% url 'accounts:change_password' %}" class="btn btn-light fw-semibold text-start"><i class="bi bi-key me-2"></i> Change Password</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Edit Form -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5">
+                <h4 class="fw-bold mb-4"><i class="bi bi-person-gear text-success me-2"></i>Account &amp; Budget Settings</h4>
+
+                <form method="POST" action="{% url 'accounts:profile' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <h6 class="fw-bold text-muted text-uppercase small mb-3">Personal Information</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">First Name</label>
+                            {{ form.first_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Last Name</label>
+                            {{ form.last_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Email Address</label>
+                            {{ form.email }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Phone Number</label>
+                            {{ form.phone }}
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-muted text-uppercase small mb-3">Smart Grocery Budget Preferences</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Default Monthly Budget (₹)</label>
+                            {{ form.monthly_budget }}
+                            <div class="form-text" style="font-size: 0.75rem;">Your target spending limit per calendar month.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Alert Threshold (%)</label>
+                            {{ form.budget_warning_threshold }}
+                            <div class="form-text" style="font-size: 0.75rem;">Trigger warning when spending exceeds this percentage (e.g. 80%).</div>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-sk-primary px-4 py-2 rounded-pill fw-bold">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

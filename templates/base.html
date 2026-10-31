@@ -1,0 +1,344 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SmartKart AI - Intelligent Grocery Delivery & Shopping System{% endblock %}</title>
+    
+    <!-- Meta tags for SEO -->
+    <meta name="description" content="{% block meta_description %}SmartKart AI is an intelligent quick-commerce grocery delivery system featuring AI list scanner, smart monthly budget, recipe-to-cart, expiry rescue deals, and product substitutions.{% endblock %}">
+    <meta name="author" content="SmartKart AI College Major Project">
+
+    <!-- Fonts, Bootstrap 5.3, Bootstrap Icons & Chart.js are served from static/vendor/
+         so the whole project runs OFFLINE (no internet needed during lab demo / viva). -->
+    <link rel="stylesheet" href="{% static 'vendor/inter/inter.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+
+    <!-- Chart.js for Dashboards -->
+    <script src="{% static 'vendor/chartjs/chart.umd.min.js' %}"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% csrf_token %}
+
+    <!-- Top Academic Demo & Role Announcement Bar -->
+    <div class="bg-dark text-white py-1 px-3" style="font-size: 0.78rem; background-color: #064E3B !important;">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <span class="badge bg-warning text-dark me-2">College Major Project</span>
+                <i class="bi bi-shield-check text-success me-1"></i> SmartKart AI &bull; Intelligent Grocery Delivery & Household Shopping
+            </div>
+            <div class="d-none d-md-flex align-items-center gap-3">
+                <span><i class="bi bi-clock-history me-1"></i> Delivery in <b>15-30 mins</b></span>
+                <span class="text-white-50">|</span>
+                {% if user.is_authenticated %}
+                    <span>Role: <strong class="text-warning">{{ user_role }}</strong> ({{ user.username }})</span>
+                    {% if user.is_staff %}
+                        <a href="{% url 'dashboard:admin_dashboard' %}" class="text-white text-decoration-underline"><i class="bi bi-speedometer2"></i> Admin Portal</a>
+                    {% elif user_role == 'DELIVERY' %}
+                        <a href="{% url 'delivery:dashboard' %}" class="text-white text-decoration-underline"><i class="bi bi-bicycle"></i> Delivery Partner</a>
+                    {% endif %}
+                {% else %}
+                    <span class="text-white-50">Demo Access: Customer, Admin & Delivery Roles Supported</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <header class="sk-navbar">
+        <div class="container d-flex align-items-center justify-content-between gap-3 flex-wrap flex-lg-nowrap">
+            
+            <!-- Brand Logo -->
+            <a href="{% url 'core:home' %}" class="sk-logo-brand text-decoration-none">
+                <div class="sk-logo-icon">
+                    <i class="bi bi-cart4"></i>
+                </div>
+                <span>SmartKart<span class="sk-logo-badge">AI</span></span>
+            </a>
+
+            <!-- Location Selector -->
+            <div class="d-none d-xl-flex align-items-center text-start lh-1" style="min-width: 140px;">
+                <i class="bi bi-geo-alt-fill text-danger fs-4 me-2"></i>
+                <div>
+                    <div class="fw-bold" style="font-size: 0.85rem;">Delivery in 15m</div>
+                    <div class="text-muted" style="font-size: 0.75rem;">New Delhi, 110001</div>
+                </div>
+            </div>
+
+            <!-- Central Search Bar with Live Dropdown -->
+            <div class="flex-grow-1 mx-lg-2" style="max-width: 580px; width: 100%;">
+                <form action="{% url 'catalogue:product_search' %}" method="GET" class="sk-search-wrapper">
+                    <i class="bi bi-search sk-search-icon"></i>
+                    <input type="text" name="q" id="skSearchInput" class="form-control sk-search-input" placeholder="Search 40+ fresh items, brands, recipes..." autocomplete="off" value="{{ request.GET.q }}">
+                    <!-- Voice search (Web Speech API - works in Chrome / Edge). Hidden automatically if unsupported. -->
+                    <button type="button" id="skVoiceSearchBtn" class="sk-voice-btn d-none" title="Search by voice" aria-label="Search by voice">
+                        <i class="bi bi-mic-fill"></i>
+                    </button>
+                    <div id="skSearchDropdown" class="sk-search-dropdown"></div>
+                </form>
+            </div>
+
+            <!-- Right Actions: Scanner, Budget, Wishlist, Cart & Profile -->
+            <div class="d-flex align-items-center gap-2">
+                
+                <!-- AI Scanner Quick Button -->
+                <a href="{% url 'smart_features:scanner' %}" class="btn btn-outline-success btn-sm d-none d-sm-inline-flex align-items-center gap-1 rounded-pill px-3 py-2 fw-semibold">
+                    <i class="bi bi-camera-fill text-success"></i>
+                    <span>AI List Scanner</span>
+                </a>
+
+                <!-- Notifications Bell (order updates, budget alerts, rescue deals) -->
+                {% if user.is_authenticated %}
+                <a href="{% url 'core:notifications' %}" class="btn btn-light position-relative p-2 rounded-circle border" title="Notifications">
+                    <i class="bi bi-bell fs-5 text-dark"></i>
+                    {% if unread_notifications_count %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ unread_notifications_count }}</span>
+                    {% endif %}
+                </a>
+                {% endif %}
+
+                <!-- Wishlist Icon -->
+                {% if user.is_authenticated %}
+                <a href="{% url 'cart:wishlist' %}" class="btn btn-light position-relative p-2 rounded-circle border" title="My Wishlist">
+                    <i class="bi bi-heart fs-5 text-dark"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="navWishlistCount">
+                        {{ wishlist_count }}
+                    </span>
+                </a>
+                {% endif %}
+
+                <!-- Cart Button -->
+                <a href="{% url 'cart:cart_detail' %}" class="btn btn-sk-primary d-inline-flex align-items-center gap-2 rounded-pill px-3 py-2 shadow-sm position-relative">
+                    <i class="bi bi-bag-fill fs-5"></i>
+                    <div class="d-flex flex-column text-start lh-1">
+                        <span class="small fw-bold text-nowrap"><span id="navCartCount">{{ cart_count }}</span> items</span>
+                        <span style="font-size: 0.72rem;" id="navCartTotal" class="{% if not cart or cart.subtotal <= 0 %}d-none{% endif %}">₹{{ cart.grand_total|default:"0.00" }}</span>
+                    </div>
+                </a>
+
+                <!-- User Profile / Auth Dropdown -->
+                {% if user.is_authenticated %}
+                <div class="dropdown">
+                    <button class="btn btn-light border rounded-circle p-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle fs-5 text-success"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-2" style="border-radius: var(--sk-radius); min-width: 220px;">
+                        <li class="px-3 py-2 border-bottom">
+                            <div class="fw-bold">{{ user.get_full_name|default:user.username }}</div>
+                            <div class="text-muted small">{{ user.email }}</div>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle mt-1">{{ user_role }}</span>
+                        </li>
+                        
+                        {% if user.is_staff %}
+                        <li><a class="dropdown-item py-2 fw-semibold text-success" href="{% url 'dashboard:admin_dashboard' %}"><i class="bi bi-speedometer2 me-2"></i> Admin Portal</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% endif %}
+
+                        {% if user_role == 'DELIVERY' %}
+                        <li><a class="dropdown-item py-2 fw-semibold text-primary" href="{% url 'delivery:dashboard' %}"><i class="bi bi-bicycle me-2"></i> Delivery Dashboard</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% endif %}
+
+                        <li><a class="dropdown-item py-2" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i> My Profile</a></li>
+                        <li><a class="dropdown-item py-2" href="{% url 'orders:order_history' %}"><i class="bi bi-box2 me-2"></i> My Orders</a></li>
+                        <li><a class="dropdown-item py-2" href="{% url 'smart_features:budget_dashboard' %}"><i class="bi bi-wallet2 me-2"></i> Budget Dashboard</a></li>
+                        <li><a class="dropdown-item py-2" href="{% url 'accounts:address_list' %}"><i class="bi bi-geo-alt me-2"></i> Saved Addresses</a></li>
+                        <li><a class="dropdown-item py-2" href="{% url 'core:notifications' %}"><i class="bi bi-bell me-2"></i> Notifications {% if unread_notifications_count %}<span class="badge bg-danger">{{ unread_notifications_count }}</span>{% endif %}</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item py-2 text-danger" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+                    </ul>
+                </div>
+                {% else %}
+                <div class="d-flex align-items-center gap-1">
+                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-dark btn-sm rounded-pill px-3 py-2 fw-semibold">Login</a>
+                    <a href="{% url 'accounts:register' %}" class="btn btn-sk-primary btn-sm rounded-pill px-3 py-2 fw-semibold">Sign Up</a>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </header>
+
+    <!-- Sub-navigation: Category & Innovation Feature Badges -->
+    <nav class="sk-subnav">
+        <div class="container d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center overflow-auto py-1">
+                <!-- 5 Key Innovations Highlighted -->
+                <a href="{% url 'smart_features:scanner' %}" class="sk-subnav-pill active text-decoration-none">
+                    <i class="bi bi-magic text-success"></i> 1. AI List Scanner
+                </a>
+                <a href="{% url 'smart_features:budget_dashboard' %}" class="sk-subnav-pill text-decoration-none">
+                    <i class="bi bi-pie-chart-fill text-primary"></i> 2. Smart Budget
+                </a>
+                <a href="{% url 'smart_features:recipe_list' %}" class="sk-subnav-pill text-decoration-none">
+                    <i class="bi bi-egg-fried text-warning"></i> 3. Recipe-to-Cart
+                </a>
+                <a href="{% url 'smart_features:expiry_deals' %}" class="sk-subnav-pill rescue text-decoration-none">
+                    <i class="bi bi-fire text-danger"></i> 4. Expiry Rescue Deals
+                </a>
+                <a href="{% url 'catalogue:product_list' %}" class="sk-subnav-pill text-decoration-none">
+                    <i class="bi bi-arrow-repeat text-info"></i> 5. Smart Substitution
+                </a>
+                
+                <span class="text-muted mx-2 d-none d-md-inline">|</span>
+
+                <!-- Quick Category Links -->
+                {% for cat in nav_categories %}
+                <a href="{% url 'catalogue:category_products' cat.slug %}" class="sk-subnav-pill text-decoration-none d-none d-lg-inline-flex">
+                    <i class="bi {{ cat.icon_class|default:'bi-basket' }}"></i> {{ cat.name }}
+                </a>
+                {% endfor %}
+            </div>
+
+            <div class="d-none d-lg-block">
+                <a href="{% url 'catalogue:product_list' %}" class="small fw-semibold text-success text-decoration-none">All Products <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages Container -->
+    <div class="container mt-3">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill{% elif message.tags == 'danger' %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Main Content Block -->
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Blinkit-style floating "View Cart" bar (updated live by main.js) -->
+    {% with current=request.resolver_match.url_name %}
+    {% if current != 'cart_detail' and current != 'checkout' and current != 'confirmation' and user_role != 'ADMIN' and user_role != 'DELIVERY' %}
+    <a href="{% url 'cart:cart_detail' %}" id="skFloatingCart" class="sk-floating-cart {% if not cart_count %}d-none{% endif %}">
+        <span class="d-flex align-items-center gap-2">
+            <span class="sk-floating-cart-icon"><i class="bi bi-bag-fill"></i></span>
+            <span class="lh-sm">
+                <span class="d-block fw-bold"><span id="skFloatCount">{{ cart_count }}</span> item(s) &bull; ₹<span id="skFloatTotal">{{ cart.grand_total|default:"0.00" }}</span></span>
+                <span class="d-block small opacity-75" id="skFloatHint">{% if cart and cart.delivery_fee > 0 %}Add more for FREE delivery above ₹499{% else %}Free delivery unlocked 🎉{% endif %}</span>
+            </span>
+        </span>
+        <span class="fw-bold">View Cart <i class="bi bi-chevron-right"></i></span>
+    </a>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Toast area for instant-cart feedback -->
+    <div id="skToastArea" class="sk-toast-area" aria-live="polite"></div>
+
+    <!-- Mobile Bottom Sticky Navigation -->
+    <div class="sk-mobile-bottom-nav">
+        <a href="{% url 'core:home' %}" class="sk-mobile-nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+            <i class="bi bi-house-door"></i>
+            <span>Home</span>
+        </a>
+        <a href="{% url 'catalogue:product_list' %}" class="sk-mobile-nav-item {% if 'products' in request.path %}active{% endif %}">
+            <i class="bi bi-grid"></i>
+            <span>Shop</span>
+        </a>
+        <a href="{% url 'smart_features:scanner' %}" class="sk-mobile-nav-item text-success fw-bold">
+            <i class="bi bi-camera-fill"></i>
+            <span>AI Scanner</span>
+        </a>
+        <a href="{% url 'cart:cart_detail' %}" class="sk-mobile-nav-item position-relative {% if 'cart' in request.path %}active{% endif %}">
+            <i class="bi bi-bag"></i>
+            <span>Cart</span>
+            {% if cart_count %}
+            <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                {{ cart_count }}
+            </span>
+            {% endif %}
+        </a>
+        <a href="{% if user.is_authenticated %}{% url 'accounts:profile' %}{% else %}{% url 'accounts:login' %}{% endif %}" class="sk-mobile-nav-item {% if 'accounts' in request.path %}active{% endif %}">
+            <i class="bi bi-person"></i>
+            <span>Account</span>
+        </a>
+    </div>
+
+    <!-- Footer -->
+    <footer class="sk-footer">
+        <div class="container">
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="sk-logo-icon" style="width: 32px; height: 32px; font-size: 1.1rem;">
+                            <i class="bi bi-cart4"></i>
+                        </div>
+                        <span class="text-white fw-bold fs-5">SmartKart AI</span>
+                    </div>
+                    <p class="small text-white-50">
+                        SmartKart AI is an intelligent quick-commerce grocery delivery and household shopping management system engineered using Python, Django, SQLite, Chart.js, and ReportLab.
+                    </p>
+                    <div class="sk-simulation-badge">
+                        <i class="bi bi-info-circle-fill"></i> Academic Major Project Demo
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <h5>5 Smart Innovations</h5>
+                    <ul>
+                        <li><a href="{% url 'smart_features:scanner' %}">AI List Scanner</a></li>
+                        <li><a href="{% url 'smart_features:budget_dashboard' %}">Monthly Smart Budget</a></li>
+                        <li><a href="{% url 'smart_features:recipe_list' %}">Recipe-to-Cart</a></li>
+                        <li><a href="{% url 'smart_features:expiry_deals' %}">Expiry Rescue Deals</a></li>
+                        <li><a href="{% url 'catalogue:product_list' %}">Smart Substitution</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <h5>Categories</h5>
+                    <ul>
+                        {% for cat in nav_categories|slice:":6" %}
+                        <li><a href="{% url 'catalogue:category_products' cat.slug %}">{{ cat.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <h5>Customer & Portals</h5>
+                    <ul>
+                        <li><a href="{% url 'core:about' %}">About SmartKart AI</a></li>
+                        <li><a href="{% url 'core:contact' %}">Customer Support</a></li>
+                        <li><a href="{% url 'orders:order_history' %}">Track My Order</a></li>
+                        {% if user.is_staff %}
+                        <li><a href="{% url 'dashboard:admin_dashboard' %}" class="text-warning">Administrator Portal</a></li>
+                        {% endif %}
+                        {% if user_role == 'DELIVERY' %}
+                        <li><a href="{% url 'delivery:dashboard' %}" class="text-info">Delivery Partner Portal</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+
+            <hr class="border-secondary opacity-25 my-3">
+
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small text-white-50 gap-2">
+                <div>&copy; 2026 SmartKart AI Major Project. Built with Python &amp; Django.</div>
+                <div>Simulated Payments &amp; Delivery Tracking for Academic Demonstration Only.</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+    
+    <!-- Main Custom JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

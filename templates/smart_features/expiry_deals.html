@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block title %}Expiry Rescue Deals - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header Banner -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5 mb-4 text-white" style="background: linear-gradient(135deg, #991B1B 0%, #DC2626 50%, #EA580C 100%);">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold mb-2">
+                    <i class="bi bi-recycle me-1"></i> Innovative Feature #4 &bull; Zero Food Waste
+                </span>
+                <h2 class="display-6 fw-bold mb-2">Expiry Rescue Deals</h2>
+                <p class="text-white-50 lead mb-3" style="font-size: 1.05rem;">
+                    Enjoy massive discounts (up to 70% OFF) on quality fresh perishables nearing their best-before dates. Save your budget while helping eliminate grocery waste!
+                </p>
+                <div class="d-inline-flex align-items-center gap-2 bg-black bg-opacity-25 px-3 py-2 rounded-pill small">
+                    <i class="bi bi-heart-pulse-fill text-warning"></i>
+                    <span>Total Community Food Items Rescued: <b>{{ rescued_total }} Items</b></span>
+                </div>
+            </div>
+            <div class="col-lg-4 text-end d-none d-lg-block">
+                <i class="bi bi-hourglass-split display-1 text-white opacity-25"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Urgency Tiers Legend Bar -->
+    <div class="card shadow-sm border-0 rounded-4 p-3 mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 small">
+            <span class="fw-bold text-dark"><i class="bi bi-info-circle text-primary me-1"></i>Urgency Levels:</span>
+            <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="bi bi-fire me-1"></i> Red: Expires within 1 Day (60-70% OFF)</span>
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="bi bi-clock-history me-1"></i> Orange: Expires in 2-3 Days (40-50% OFF)</span>
+            <span class="badge bg-info text-white px-3 py-2 rounded-pill"><i class="bi bi-calendar-check me-1"></i> Yellow: Expires in 4-7 Days (25-35% OFF)</span>
+        </div>
+    </div>
+
+    <!-- Deals Grid -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mb-5">
+        {% for deal in deals %}
+        <div class="col">
+            <div class="sk-product-card shadow-sm border-danger border-opacity-25">
+                <div class="sk-product-image-box">
+                    <span class="sk-rescue-badge">
+                        <i class="bi bi-fire"></i> {{ deal.rescue_discount_percent }}% OFF
+                    </span>
+
+                    <a href="{% url 'catalogue:product_detail' deal.product.slug %}">
+                        {% if deal.product.image %}
+                            <img src="{{ deal.product.image.url }}" alt="{{ deal.product.name }}" class="sk-product-img">
+                        {% else %}
+                            <span class="sk-emoji sk-emoji-lg" style="--sk-tile: {{ deal.product|product_tile_color }};" aria-hidden="true">{{ deal.product|product_emoji }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+
+                <div class="sk-product-body">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="sk-product-unit">{{ deal.product.unit }}</span>
+                        <span class="badge bg-{{ deal.urgency_level }} text-white" style="font-size: 0.68rem;">
+                            {{ deal.days_remaining }} Days Left
+                        </span>
+                    </div>
+
+                    <a href="{% url 'catalogue:product_detail' deal.product.slug %}" class="sk-product-title text-decoration-none">
+                        {{ deal.product.name }}
+                    </a>
+
+                    <div class="small text-muted mb-2" style="font-size: 0.75rem;">
+                        <i class="bi bi-calendar-x"></i> Expiry: <b>{{ deal.expiry_date|date:"d M Y" }}</b>
+                    </div>
+
+                    <div class="sk-product-footer">
+                        <div>
+                            <span class="sk-price-now text-danger">₹{{ deal.rescue_price }}</span>
+                            <span class="sk-price-was">₹{{ deal.product.original_price }}</span>
+                        </div>
+
+                        <form action="{% url 'smart_features:expiry_add_to_cart' deal.id %}" method="POST">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold">
+                                <i class="bi bi-bag-plus"></i> Rescue
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-shield-check text-success display-4"></i>
+            <h4 class="fw-bold mt-3 mb-1">Zero Food Waste Alert!</h4>
+            <p class="text-muted small">All near-expiry inventory has been successfully rescued. Check back in a few hours!</p>
+            <a href="{% url 'catalogue:product_list' %}" class="btn btn-sk-primary rounded-pill px-4">Browse Regular Inventory</a>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Placed Successfully - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5 text-center">
+                
+                <div class="sk-logo-icon mx-auto mb-3" style="width: 72px; height: 72px; font-size: 2.5rem; background: linear-gradient(135deg, #10B981, #059669); border-radius: 50%;">
+                    <i class="bi bi-check-lg"></i>
+                </div>
+
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill fw-bold mx-auto mb-2">
+                    Order Confirmed
+                </span>
+
+                <h2 class="fw-bold mb-1">Thank You For Shopping!</h2>
+                <p class="text-muted small mb-4">Your order has been received and sent to our local store for immediate packing.</p>
+
+                <!-- Order Meta Card -->
+                <div class="p-4 bg-light rounded-4 text-start mb-4 border">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Order Reference Number</span>
+                            <span class="fw-bold text-dark fs-5">#{{ order.order_number }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Estimated Delivery Slot</span>
+                            <span class="fw-bold text-success">{{ order.get_delivery_slot_display }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Delivering To</span>
+                            <span class="fw-semibold text-dark small">{{ order.shipping_full_name }}, {{ order.shipping_street|truncatewords:4 }}, {{ order.shipping_city }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Total Paid / Payable</span>
+                            <span class="fw-bold text-dark fs-5">₹{{ order.grand_total }}</span>
+                            <span class="badge bg-light text-secondary border small">{{ order.get_payment_method_display }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="{% url 'orders:order_tracking' order.order_number %}" class="btn btn-sk-primary rounded-pill px-4 py-2 fw-bold">
+                        <i class="bi bi-geo-alt-fill me-1"></i> Track Order Live
+                    </a>
+                    <a href="{% url 'orders:download_invoice' order.order_number %}" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-semibold">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF Invoice
+                    </a>
+                    <a href="{% url 'core:home' %}" class="btn btn-light rounded-pill px-4 py-2 border">
+                        Continue Shopping
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

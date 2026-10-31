@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block title %}{{ recipe.name }} - Recipe-to-Cart - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'smart_features:recipe_list' %}">Recipes</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ recipe.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Recipe Banner Card -->
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+        <div class="row g-0">
+            <div class="col-lg-5 bg-light d-flex align-items-center justify-content-center p-4">
+                {% if recipe.image %}
+                    <img src="{{ recipe.image.url }}" alt="{{ recipe.name }}" class="img-fluid rounded-3" style="max-height: 280px; object-fit: cover;">
+                {% else %}
+                    <span class="sk-emoji sk-emoji-xl" aria-hidden="true">{{ recipe|recipe_emoji }}</span>
+                {% endif %}
+            </div>
+            <div class="col-lg-7 p-4 p-md-5 d-flex flex-column justify-content-center">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-warning text-dark">{{ recipe.cuisine }}</span>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle">{{ recipe.get_diet_type_display }}</span>
+                    <span class="badge bg-light text-dark border">{{ recipe.get_difficulty_display }}</span>
+                </div>
+                <h2 class="fw-bold mb-2">{{ recipe.name }}</h2>
+                <p class="text-secondary small mb-4">{{ recipe.description }}</p>
+
+                <div class="row g-3 text-center border-top pt-3">
+                    <div class="col-4">
+                        <span class="text-muted small d-block">Prep Time</span>
+                        <b class="text-dark">{{ recipe.prep_time_minutes }} mins</b>
+                    </div>
+                    <div class="col-4">
+                        <span class="text-muted small d-block">Cook Time</span>
+                        <b class="text-dark">{{ recipe.cook_time_minutes }} mins</b>
+                    </div>
+                    <div class="col-4">
+                        <span class="text-muted small d-block">Total Time</span>
+                        <b class="text-success">{{ recipe.total_time_minutes }} mins</b>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Recipe-to-Cart Form -->
+    <form method="POST" action="{% url 'smart_features:recipe_add_to_cart' recipe.slug %}">
+        {% csrf_token %}
+        <input type="hidden" name="servings" value="{{ selected_servings }}" id="hiddenServingsInput">
+
+        <div class="row g-4">
+            
+            <!-- Left: Ingredient Checklist & Portion Scaler -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                        <div>
+                            <h4 class="fw-bold mb-0"><i class="bi bi-basket3 text-success me-2"></i>Ingredient Checklist</h4>
+                            <span class="text-muted small">Uncheck items you already have at home in your kitchen</span>
+                        </div>
+                        
+                        <!-- Serving Size Scaler -->
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="fw-bold small text-dark mb-0">Servings:</label>
+                            <select id="recipeServingSelect" data-base-servings="{{ recipe.base_servings }}" class="form-select form-select-sm" style="width: 120px;" onchange="location = '?servings=' + this.value;">
+                                {% for opt in serving_options %}
+                                <option value="{{ opt }}" {% if selected_servings == opt %}selected{% endif %}>{{ opt }} Persons</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="list-group list-group-flush">
+                        {% for item in recipe_info.ingredients %}
+                        <div class="list-group-item px-0 py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3">
+                            <div class="d-flex align-items-center gap-3">
+                                {% if item.in_stock %}
+                                <input class="form-check-input mt-0" type="checkbox" name="ingredient_id" value="{{ item.ingredient.id }}" checked style="width: 20px; height: 20px;">
+                                {% else %}
+                                <i class="bi bi-x-circle text-danger" title="Item currently out of stock"></i>
+                                {% endif %}
+
+                                <div>
+                                    <div class="fw-bold text-dark">
+                                        {{ item.name }}
+                                        {% if item.is_optional %}<span class="badge bg-light text-muted border small ms-1">Optional</span>{% endif %}
+                                    </div>
+                                    <div class="text-muted small">
+                                        Scaled Requirement: <b class="text-success"><span class="ingredient-qty-val" data-base-qty="{{ item.ingredient.quantity_per_base_servings }}">{{ item.scaled_quantity }}</span> {{ item.unit }}</b>
+                                        {% if item.notes %}&bull; <span class="fst-italic">{{ item.notes }}</span>{% endif %}
+                                    </div>
+
+                                    <!-- Mapped Product Info -->
+                                    {% if item.product %}
+                                    <div class="small mt-1">
+                                        <span class="text-muted">Mapped Product:</span> 
+                                        <a href="{% url 'catalogue:product_detail' item.product.slug %}" target="_blank" class="text-dark fw-semibold text-decoration-none">
+                                            {{ item.product.name }} ({{ item.product.unit }})
+                                        </a>
+                                        {% if item.in_stock %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle ms-1">In Stock</span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-1">Out of Stock</span>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Substitutes if out of stock -->
+                                    {% if item.substitutes %}
+                                    <div class="small text-info mt-1">
+                                        <i class="bi bi-arrow-repeat me-1"></i> Recommended substitute:
+                                        {% for sub in item.substitutes %}
+                                        <a href="{% url 'catalogue:product_detail' sub.product.slug %}" target="_blank" class="fw-bold text-info">
+                                            {{ sub.product.name }} (₹{{ sub.product.selling_price }})
+                                        </a>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                {% if item.price %}
+                                    <span class="fw-bold text-dark">₹{{ item.price }}</span>
+                                    <div class="text-muted" style="font-size: 0.72rem;">per unit pack</div>
+                                    {% if item.in_stock %}
+                                    <div class="badge bg-success-subtle text-success border border-success-subtle mt-1" title="Packs needed for {{ selected_servings }} people">
+                                        &times;{{ item.packs_needed }} pack{{ item.packs_needed|pluralize }} = ₹{{ item.line_cost }}
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-light text-muted border">Unavailable</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Step-by-Step Cooking Steps -->
+                <div class="card shadow-sm border-0 rounded-4 p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-journal-text text-warning me-2"></i>Preparation &amp; Cooking Instructions</h5>
+                    <ol class="list-group list-group-numbered list-group-flush small lh-base text-secondary">
+                        {% for step in recipe.get_instructions_list %}
+                        <li class="list-group-item px-0 py-2 border-0">
+                            {{ step }}
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Right: Recipe Summary & 1-Click Cart Button -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 rounded-4 p-4 sticky-top" style="top: 85px;">
+                    <h5 class="fw-bold mb-3">Recipe Cart Summary</h5>
+                    
+                    <div class="d-flex justify-content-between text-muted small mb-2">
+                        <span>Selected Servings</span>
+                        <b>{{ selected_servings }} People</b>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between text-muted small mb-2">
+                        <span>Total Ingredients</span>
+                        <b>{{ recipe_info.ingredients|length }} items</b>
+                    </div>
+
+                    <div class="d-flex justify-content-between text-muted small mb-3">
+                        <span>Estimated Ingredients Cost</span>
+                        <b class="text-dark fs-5">₹{{ recipe_info.total_estimated_cost }}</b>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 small text-muted mb-4">
+                        <i class="bi bi-info-circle text-primary me-1"></i>
+                        Pantry items (like salt or oil) you uncheck will be automatically excluded so you don't over-order.
+                        <div class="mt-2"><i class="bi bi-calculator text-success me-1"></i>
+                        Pack counts are calculated from the scaled quantity &amp; pack size (e.g. 1.2 kg needed &rarr; 2 &times; 1 kg packs).</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-sk-primary w-100 py-3 rounded-pill fw-bold shadow">
+                        <i class="bi bi-cart-plus-fill me-1"></i> Add Ingredients to Cart
+                    </button>
+
+                    <a href="{% url 'smart_features:recipe_list' %}" class="btn btn-light w-100 py-2 rounded-pill mt-2 border text-muted small">
+                        Back to Recipes
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </form>
+
+</div>
+{% endblock %}

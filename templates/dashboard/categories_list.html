@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Categories - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-grid text-success me-2"></i>Category Management</h3>
+            <p class="text-muted small mb-0">Create and manage grocery aisles and store sections</p>
+        </div>
+        <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            &larr; Admin Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+        
+        <!-- Left: Add New Category Form -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-plus-circle text-success me-2"></i>Add New Category</h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Category Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Exotic Fruits" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Bootstrap Icon Class</label>
+                        <input type="text" name="icon_class" class="form-control" placeholder="bi-basket / bi-egg-fried" value="bi-basket">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Description</label>
+                        <textarea name="description" class="form-control" rows="2" placeholder="Brief aisle summary"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-sk-primary w-100 rounded-pill py-2 fw-bold">
+                        Create Category
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right: Existing Categories List -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-muted text-uppercase">
+                            <tr>
+                                <th>Category Name</th>
+                                <th>Icon</th>
+                                <th>Products Count</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cat in categories %}
+                            <tr>
+                                <td class="fw-bold text-dark small">
+                                    <a href="{% url 'catalogue:category_products' cat.slug %}" target="_blank" class="text-dark text-decoration-none">
+                                        {{ cat.name }}
+                                    </a>
+                                </td>
+                                <td><i class="bi {{ cat.icon_class }} fs-5 text-success"></i> ({{ cat.icon_class }})</td>
+                                <td><span class="badge bg-light text-dark border">{{ cat.prod_count }} Items</span></td>
+                                <td class="text-center text-nowrap">
+                                    {% if not cat.is_active %}<span class="badge bg-secondary me-1">Hidden</span>{% endif %}
+                                    <a href="{% url 'dashboard:category_edit' cat.id %}" class="btn btn-sm btn-outline-primary rounded-circle" title="Edit category">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form action="{% url 'dashboard:category_delete' cat.id %}" method="POST" class="d-inline" onsubmit="return confirm('Delete this category?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No categories created yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

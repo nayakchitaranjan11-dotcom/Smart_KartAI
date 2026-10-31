@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="sk-logo-icon mx-auto mb-2" style="width: 48px; height: 48px; font-size: 1.5rem;">
+                        <i class="bi bi-person-plus-fill"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">Join SmartKart AI</h3>
+                    <p class="text-muted small">Create your customer account to start smart grocery shopping</p>
+                </div>
+
+                <form method="POST" action="{% url 'accounts:register' %}">
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">First Name <span class="text-danger">*</span></label>
+                            {{ form.first_name }}
+                            {{ form.first_name.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Last Name <span class="text-danger">*</span></label>
+                            {{ form.last_name }}
+                            {{ form.last_name.errors }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Username <span class="text-danger">*</span></label>
+                            {{ form.username }}
+                            {{ form.username.errors }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Email Address <span class="text-danger">*</span></label>
+                            {{ form.email }}
+                            {{ form.email.errors }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Mobile Phone (10 digits) <span class="text-danger">*</span></label>
+                            {{ form.phone }}
+                            {{ form.phone.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Password <span class="text-danger">*</span></label>
+                            {{ form.password }}
+                            {{ form.password.errors }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Confirm Password <span class="text-danger">*</span></label>
+                            {{ form.confirm_password }}
+                            {{ form.confirm_password.errors }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Monthly Grocery Budget (₹) <small class="text-muted">(Optional)</small></label>
+                            {{ form.monthly_budget }}
+                            <div class="form-text" style="font-size: 0.75rem;">Used by Smart Budget to track and warn before overspending.</div>
+                            {{ form.monthly_budget.errors }}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-sk-primary w-100 py-2 mt-4 rounded-pill fw-bold">
+                        Create My Account
+                    </button>
+                </form>
+
+                <div class="text-center mt-4 pt-3 border-top">
+                    <span class="text-muted small">Already have an account?</span>
+                    <a href="{% url 'accounts:login' %}" class="fw-bold text-success small ms-1">Login here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

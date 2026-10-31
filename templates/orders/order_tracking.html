@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}Track Order #{{ order.order_number }} - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-geo-alt-fill text-success me-2"></i>Live Order Tracking</h3>
+            <p class="text-muted small mb-0">Order Reference: <b>#{{ order.order_number }}</b></p>
+        </div>
+        <div class="sk-simulation-badge">
+            <i class="bi bi-info-circle-fill"></i> Simulated Hyperlocal Tracking
+        </div>
+    </div>
+
+    <div class="row g-4">
+        
+        <!-- Left: Visual Tracking Timeline -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5 mb-4">
+                
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill fw-bold">
+                            {{ order.get_status_display }}
+                        </span>
+                        <div class="fw-bold fs-5 mt-2">
+                            {% if order.status == 'DELIVERED' %}
+                                Order Successfully Delivered!
+                            {% elif order.status == 'CANCELLED' %}
+                                Order Cancelled
+                            {% else %}
+                                Arriving via Express Dark Store in 15-30 mins
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="sk-logo-icon" style="width: 48px; height: 48px; font-size: 1.5rem;">
+                        <i class="bi bi-bicycle"></i>
+                    </div>
+                </div>
+
+                <!-- Step-by-Step Vertical Timeline -->
+                <div class="sk-tracking-timeline">
+                    {% for step in tracking_steps %}
+                    <div class="sk-tracking-step {% if forloop.counter0 < current_idx %}completed{% elif forloop.counter0 == current_idx %}active{% endif %}">
+                        <div class="sk-step-icon">
+                            <i class="bi {{ step.icon }}"></i>
+                        </div>
+                        <div class="pt-1">
+                            <h6 class="fw-bold mb-0 {% if forloop.counter0 <= current_idx %}text-dark{% else %}text-muted{% endif %}">
+                                {{ step.label }}
+                            </h6>
+                            <div class="text-muted small">
+                                {% if forloop.counter0 < current_idx %}
+                                    <span class="text-success"><i class="bi bi-check2"></i> Completed</span>
+                                {% elif forloop.counter0 == current_idx %}
+                                    <span class="text-primary fw-semibold"><i class="bi bi-arrow-repeat"></i> In Progress...</span>
+                                {% else %}
+                                    Pending next stage
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Right: Delivery Details & Simulated Map UI -->
+        <div class="col-lg-5">
+            
+            <!-- Simulated Delivery Map UI (upgraded: animated SVG route + live ETA, polled every 10 s) -->
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4" id="skTracker"
+                 data-status-url="{% url 'orders:order_status_api' order.order_number %}"
+                 data-status="{{ order.status }}" data-progress="{{ order.progress_percent }}">
+                <div class="sk-track-map">
+                    <div class="sk-eta-chip">
+                        {% if order.status == 'DELIVERED' %}
+                            <i class="bi bi-check-circle-fill text-success"></i> <b>Delivered</b>
+                        {% elif order.status == 'CANCELLED' %}
+                            <i class="bi bi-x-circle-fill text-danger"></i> <b class="text-danger">Cancelled</b>
+                        {% elif order.delivery_slot == 'EXPRESS_15MIN' %}
+                            Arriving in <b id="skEtaValue">~{{ eta_minutes }}</b> <b>min</b>
+                        {% else %}
+                            <i class="bi bi-calendar-check text-success"></i> {{ order.get_delivery_slot_display }}
+                        {% endif %}
+                    </div>
+                    <svg viewBox="0 0 400 230" preserveAspectRatio="xMidYMid meet" aria-label="Simulated delivery route map">
+                        <path id="skRouteBg" class="sk-track-route-bg" d="M 50 180 C 120 180, 120 70, 200 95 S 300 160, 350 55"/>
+                        <path id="skRoute" class="sk-track-route" d="M 50 180 C 120 180, 120 70, 200 95 S 300 160, 350 55"/>
+                        <!-- Dark store -->
+                        <g transform="translate(50 180)">
+                            <circle r="20" fill="#0F5132"/>
+                            <text text-anchor="middle" dy="7" font-size="20">🏪</text>
+                        </g>
+                        <!-- Customer home -->
+                        <g transform="translate(350 55)">
+                            <circle r="20" fill="#EA580C"/>
+                            <text text-anchor="middle" dy="7" font-size="20">🏠</text>
+                        </g>
+                        <!-- Rider (moved along the path by JS) -->
+                        <g id="skRider" class="sk-track-rider" transform="translate(50 180)">
+                            <circle r="17" fill="#fff" stroke="#10B981" stroke-width="3"/>
+                            <text text-anchor="middle" dy="6" font-size="17">🛵</text>
+                        </g>
+                    </svg>
+                    <div class="d-flex justify-content-between align-items-center px-3 pb-2 small">
+                        <span class="fw-bold text-dark">Hyperlocal Dark Store Hub &rarr; {{ order.shipping_city }}</span>
+                        <span class="badge bg-dark bg-opacity-75 text-white" style="font-size: 0.72rem;">Simulated GPS Route &bull; <span id="skProgressPct">{{ order.progress_percent }}</span>%</span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    {% if order.delivery_partner %}
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="sk-logo-icon bg-success" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                            <i class="bi bi-person-badge"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark">{{ order.delivery_partner.get_full_name|default:order.delivery_partner.username }}</div>
+                            <div class="text-muted small">SmartKart Delivery Hero &bull; <i class="bi bi-star-fill text-warning"></i> {{ order.delivery_partner.delivery_profile.rating|default:"4.9" }} Rating</div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-muted small text-center">
+                        <i class="bi bi-clock me-1"></i> Delivery partner assignment in progress...
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Shipping Snapshot Card -->
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <h6 class="fw-bold mb-3">Delivery Destination</h6>
+                <div class="text-secondary small">
+                    <div class="fw-bold text-dark mb-1">{{ order.shipping_full_name }}</div>
+                    <div>{{ order.shipping_street }}</div>
+                    <div>{{ order.shipping_city }} - {{ order.shipping_postal_code }}</div>
+                    <div class="mt-2 text-dark"><i class="bi bi-telephone me-1"></i> {{ order.shipping_phone }}</div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+// Moves the rider along the SVG route according to order progress and polls the
+// status API every 10 seconds; when the status changes the page refreshes itself.
+(function () {
+    const box = document.getElementById('skTracker');
+    if (!box) return;
+    const route = document.getElementById('skRoute');
+    const rider = document.getElementById('skRider');
+    const total = route.getTotalLength();
+    route.style.strokeDasharray = total;
+
+    function place(progress) {
+        const p = Math.max(0, Math.min(100, progress)) / 100;
+        route.style.strokeDashoffset = total * (1 - p);
+        const pt = route.getPointAtLength(total * p);
+        rider.setAttribute('transform', `translate(${pt.x} ${pt.y})`);
+        const pct = document.getElementById('skProgressPct');
+        if (pct) pct.textContent = Math.round(progress);
+    }
+    place(parseFloat(box.dataset.progress || '0'));
+
+    const finished = ['DELIVERED', 'CANCELLED'];
+    if (finished.includes(box.dataset.status)) return;
+    setInterval(function () {
+        fetch(box.dataset.statusUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) return;
+                if (data.status !== box.dataset.status) { window.location.reload(); return; }
+                place(data.progress_percent);
+                const eta = document.getElementById('skEtaValue');
+                if (eta && data.eta_minutes !== null) eta.textContent = '~' + data.eta_minutes;
+            })
+            .catch(() => {});
+    }, 10000);
+})();
+</script>
+
+<style>
+@keyframes bounce-marker {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+</style>
+{% endblock %}

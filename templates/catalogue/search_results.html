@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block title %}Search Results for "{{ query }}" - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Search Header -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h3 class="fw-bold mb-1">
+                    <i class="bi bi-search text-success me-2"></i>Results for "<span class="text-success">{{ query }}</span>"
+                </h3>
+                <span class="text-muted small">Found {{ total_count }} matching grocery products</span>
+            </div>
+            <a href="{% url 'catalogue:product_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                Browse Full Catalogue
+            </a>
+        </div>
+    </div>
+
+    <!-- Results Grid -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mb-5">
+        {% for product in page_obj %}
+        <div class="col">
+            <div class="sk-product-card">
+                <div class="sk-product-image-box">
+                    {% if product.discount_percent > 0 %}
+                    <span class="sk-discount-badge">{{ product.discount_percent }}% OFF</span>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                    <button class="sk-wishlist-btn sk-wishlist-ajax" data-product-id="{{ product.id }}" title="Add to Wishlist">
+                        <i class="bi bi-heart"></i>
+                    </button>
+                    {% endif %}
+
+                    <a href="{% url 'catalogue:product_detail' product.slug %}">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="sk-product-img">
+                        {% else %}
+                            <span class="sk-emoji sk-emoji-lg" style="--sk-tile: {{ product|product_tile_color }};" aria-hidden="true">{{ product|product_emoji }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+
+                <div class="sk-product-body">
+                    <div class="sk-product-unit">{{ product.category.name }} &bull; {{ product.unit }}</div>
+                    <a href="{% url 'catalogue:product_detail' product.slug %}" class="sk-product-title text-decoration-none">
+                        {{ product.name }}
+                    </a>
+
+                    <div class="d-flex align-items-center gap-1 mb-2" style="font-size: 0.78rem;">
+                        <span class="badge bg-success bg-opacity-10 text-success fw-bold">
+                            <i class="bi bi-star-fill text-warning"></i> {{ product.average_rating }}
+                        </span>
+                        <span class="text-muted">({{ product.total_reviews }})</span>
+                    </div>
+
+                    <div class="sk-product-footer">
+                        <div>
+                            <span class="sk-price-now">₹{{ product.selling_price }}</span>
+                            {% if product.original_price > product.selling_price %}
+                            <span class="sk-price-was">₹{{ product.original_price }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% if product.is_in_stock %}
+                        <form action="{% url 'cart:add_to_cart' %}" method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn btn-sk-add">
+                                <i class="bi bi-plus"></i> ADD
+                            </button>
+                        </form>
+                        {% else %}
+                        <a href="{% url 'smart_features:substitution_detail' product.id %}" class="btn btn-sm btn-outline-secondary rounded-pill" style="font-size: 0.75rem;">
+                            Substitute
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-search text-muted display-4"></i>
+            <h5 class="fw-bold mt-3">No Results Found for "{{ query }}"</h5>
+            <p class="text-muted small">Try checking for spelling errors, broader keywords, or try our AI Grocery List Scanner.</p>
+            <div class="d-flex justify-content-center gap-2 mt-3">
+                <a href="{% url 'smart_features:scanner' %}" class="btn btn-warning rounded-pill px-4 fw-semibold text-dark">
+                    <i class="bi bi-camera me-1"></i> Use AI List Scanner
+                </a>
+                <a href="{% url 'catalogue:product_list' %}" class="btn btn-sk-primary rounded-pill px-4">Browse Catalogue</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

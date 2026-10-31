@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Scanner Results &amp; Product Matching - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-check2-circle text-success me-2"></i>AI Scanner Match Results</h3>
+            <p class="text-muted small mb-0">Review extracted grocery lines, verified inventory matches, and add to your cart</p>
+        </div>
+        <a href="{% url 'smart_features:scanner' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-arrow-repeat me-1"></i> Scan Another List
+        </a>
+    </div>
+
+    <!-- Match Disclaimer -->
+    <div class="alert alert-warning border-warning shadow-sm rounded-4 p-3 mb-4 small d-flex align-items-center justify-content-between">
+        <div>
+            <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
+            <b>Verification Tip:</b> Automatic OCR results may require manual adjustments. Review matched products, quantities, and confidence levels below before adding to cart.
+        </div>
+    </div>
+
+    <form method="POST" action="{% url 'smart_features:scanner_add_to_cart' %}">
+        {% csrf_token %}
+
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light small text-muted text-uppercase">
+                        <tr>
+                            <th style="width: 5%;" class="text-center">Select</th>
+                            <th style="width: 25%;">Extracted Note Line</th>
+                            <th style="width: 35%;">Matched Inventory Product</th>
+                            <th style="width: 15%;" class="text-center">Confidence</th>
+                            <th style="width: 10%;" class="text-center">Qty</th>
+                            <th style="width: 10%;" class="text-end">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in parsed_items %}
+                        <tr class="{% if not item.in_stock %}table-light opacity-75{% endif %}">
+                            <td class="text-center">
+                                {% if item.product and item.in_stock %}
+                                <input type="checkbox" name="product_id" value="{{ item.product.id }}" class="form-check-input" {% if item.approved %}checked{% endif %}>
+                                {% else %}
+                                <i class="bi bi-x-circle text-muted" title="Cannot add: Unmatched or Out of Stock"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-dark small font-monospace">{{ item.raw_line }}</div>
+                                <span class="text-muted" style="font-size: 0.72rem;">Parsed: <b>{{ item.parsed_name }}</b> ({{ item.quantity }} {{ item.unit }})</span>
+                            </td>
+                            <td>
+                                {% if item.product %}
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if item.product.image %}
+                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" style="width: 38px; height: 38px; object-fit: contain; border-radius: 6px;" class="border p-1 bg-white">
+                                    {% endif %}
+                                    <div>
+                                        <a href="{% url 'catalogue:product_detail' item.product.slug %}" target="_blank" class="fw-bold text-dark text-decoration-none small d-block">
+                                            {{ item.product.name }}
+                                        </a>
+                                        <span class="text-muted" style="font-size: 0.75rem;">{{ item.product.unit }}</span>
+                                        {% if not item.in_stock %}
+                                            <span class="badge bg-danger ms-1" style="font-size: 0.65rem;">Out of Stock</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="text-danger small fw-semibold">
+                                    <i class="bi bi-question-circle"></i> No close catalogue match found
+                                </div>
+                                {% endif %}
+
+                                <!-- Alternatives for out of stock / low confidence -->
+                                {% if item.alternatives %}
+                                <div class="mt-1 small">
+                                    <span class="text-muted" style="font-size: 0.72rem;">Recommended Substitute:</span>
+                                    {% for alt in item.alternatives %}
+                                    <a href="{% url 'catalogue:product_detail' alt.product.slug %}" class="badge bg-info-subtle text-info border border-info-subtle text-decoration-none">
+                                        {{ alt.product.name }} (₹{{ alt.product.selling_price }})
+                                    </a>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item.confidence >= 70 %}
+                                    <span class="badge bg-success">{{ item.confidence }}% High</span>
+                                {% elif item.confidence >= 45 %}
+                                    <span class="badge bg-warning text-dark">{{ item.confidence }}% Medium</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ item.confidence }}% Low</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <input type="number" name="quantity" value="{{ item.quantity|default:1 }}" min="1" max="20" class="form-control form-control-sm text-center mx-auto" style="width: 60px;">
+                            </td>
+                            <td class="text-end fw-bold text-dark">
+                                {% if item.product %}₹{{ item.product.selling_price }}{% else %}-{% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No grocery items parsed.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-light p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="text-muted small">Only in-stock, checked items with valid quantities will be added to your cart.</span>
+                <button type="submit" class="btn btn-sk-primary rounded-pill px-4 py-2 fw-bold">
+                    <i class="bi bi-cart-plus-fill me-1"></i> Add Approved Items to Cart
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Raw Extracted Text Box for Manual Correction -->
+    <div class="card shadow-sm border-0 rounded-4 p-4">
+        <h6 class="fw-bold mb-2"><i class="bi bi-pencil-square text-success me-2"></i>Edit Extracted Text &amp; Re-parse</h6>
+        <p class="text-muted small mb-3">If any item was misread by OCR, edit the text below and re-run:</p>
+        <form method="POST" action="{% url 'smart_features:scanner' %}">
+            {% csrf_token %}
+            <textarea name="manual_text" class="form-control font-monospace mb-3" rows="4">{{ extracted_text }}</textarea>
+            <button type="submit" class="btn btn-outline-success btn-sm rounded-pill px-4 fw-bold">
+                Re-match List
+            </button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

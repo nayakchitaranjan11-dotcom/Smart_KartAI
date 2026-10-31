@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block title %}Grocery Catalogue - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Breadcrumb & Header -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">
+                {% if selected_category %}{{ selected_category.name }}{% else %}All Products{% endif %}
+            </li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+
+        <!-- 1. Left Filters Sidebar -->
+        <div class="col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 p-4 sticky-top" style="top: 85px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-funnel text-success me-1"></i>Filters</h5>
+                    <a href="{% url 'catalogue:product_list' %}" class="small text-danger text-decoration-none fw-semibold">Reset</a>
+                </div>
+
+                <form method="GET" action="{% url 'catalogue:product_list' %}" id="filterForm">
+                    <!-- Retain active sort -->
+                    <input type="hidden" name="sort" value="{{ sort_by }}">
+
+                    <!-- Categories Filter -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Category</label>
+                        <div class="list-group list-group-flush small" style="max-height: 200px; overflow-y: auto;">
+                            <a href="{% url 'catalogue:product_list' %}" class="list-group-item list-group-item-action py-1 px-2 border-0 rounded {% if not selected_category %}fw-bold text-success bg-light{% endif %}">
+                                All Categories
+                            </a>
+                            {% for cat in categories %}
+                            <a href="{% url 'catalogue:product_list' %}?category={{ cat.slug }}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="list-group-item list-group-item-action py-1 px-2 border-0 rounded {% if selected_category.id == cat.id %}fw-bold text-success bg-light{% endif %}">
+                                {{ cat.name }} <span class="text-muted float-end">({{ cat.active_products_count }})</span>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Price Range -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Price Range (₹)</label>
+                        <div class="d-flex gap-2 align-items-center mb-2">
+                            <input type="number" name="min_price" class="form-control form-control-sm" placeholder="Min" value="{{ min_price }}">
+                            <span class="text-muted">-</span>
+                            <input type="number" name="max_price" class="form-control form-control-sm" placeholder="Max" value="{{ max_price }}">
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-outline-success w-100 rounded-pill">Apply Price</button>
+                    </div>
+
+                    <!-- In Stock Checkbox -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="in_stock" value="1" id="inStockCheck" {% if in_stock_only %}checked{% endif %} onchange="document.getElementById('filterForm').submit();">
+                            <label class="form-check-label small fw-semibold" for="inStockCheck">
+                                In Stock Only
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Popular Tags -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Diet &amp; Tags</label>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for tag in "Organic,Gluten Free,High Protein,Dairy Free,Sugar Free,Vegan"|make_list_split:"," %}
+                            <a href="{% url 'catalogue:product_list' %}?tag={{ tag }}{% if selected_category %}&category={{ selected_category.slug }}{% endif %}" class="badge bg-light text-dark border text-decoration-none p-2 rounded-pill {% if selected_tag == tag %}bg-success text-white border-success{% endif %}">
+                                {{ tag }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <!-- 2. Products Grid Area -->
+        <div class="col-lg-9">
+            
+            <!-- Top Controls: Title, Count, Sort -->
+            <div class="card shadow-sm border-0 rounded-4 p-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <h4 class="fw-bold mb-0">
+                            {% if selected_category %}{{ selected_category.name }}{% elif selected_brand %}{{ selected_brand.name }}{% else %}All Groceries{% endif %}
+                        </h4>
+                        <span class="text-muted small">Showing {{ total_count }} products</span>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="small text-muted mb-0 fw-semibold">Sort by:</label>
+                        <select class="form-select form-select-sm" style="width: 180px;" onchange="location = this.value;">
+                            <option value="{% url 'catalogue:product_list' %}?sort=popular{% if selected_category %}&category={{ selected_category.slug }}{% endif %}" {% if sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
+                            <option value="{% url 'catalogue:product_list' %}?sort=price_low{% if selected_category %}&category={{ selected_category.slug }}{% endif %}" {% if sort_by == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                            <option value="{% url 'catalogue:product_list' %}?sort=price_high{% if selected_category %}&category={{ selected_category.slug }}{% endif %}" {% if sort_by == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                            <option value="{% url 'catalogue:product_list' %}?sort=discount{% if selected_category %}&category={{ selected_category.slug }}{% endif %}" {% if sort_by == 'discount' %}selected{% endif %}>Highest Discount</option>
+                            <option value="{% url 'catalogue:product_list' %}?sort=rating{% if selected_category %}&category={{ selected_category.slug }}{% endif %}" {% if sort_by == 'rating' %}selected{% endif %}>Customer Rating</option>
+                            <option value="{% url 'catalogue:product_list' %}?sort=newest{% if selected_category %}&category={{ selected_category.slug }}{% endif %}" {% if sort_by == 'newest' %}selected{% endif %}>New Arrivals</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Cards Grid -->
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+                {% for product in page_obj %}
+                <div class="col">
+                    <div class="sk-product-card">
+                        <div class="sk-product-image-box">
+                            {% if product.discount_percent > 0 %}
+                            <span class="sk-discount-badge">{{ product.discount_percent }}% OFF</span>
+                            {% endif %}
+
+                            {% if user.is_authenticated %}
+                            <button class="sk-wishlist-btn sk-wishlist-ajax" data-product-id="{{ product.id }}" title="Add to Wishlist">
+                                <i class="bi bi-heart"></i>
+                            </button>
+                            {% endif %}
+
+                            <a href="{% url 'catalogue:product_detail' product.slug %}">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="sk-product-img">
+                                {% else %}
+                                    <span class="sk-emoji sk-emoji-lg" style="--sk-tile: {{ product|product_tile_color }};" aria-hidden="true">{{ product|product_emoji }}</span>
+                                {% endif %}
+                            </a>
+                        </div>
+
+                        <div class="sk-product-body">
+                            <div class="sk-product-unit">{{ product.category.name }} &bull; {{ product.unit }}</div>
+                            <a href="{% url 'catalogue:product_detail' product.slug %}" class="sk-product-title text-decoration-none">
+                                {{ product.name }}
+                            </a>
+
+                            <div class="d-flex align-items-center gap-1 mb-2" style="font-size: 0.78rem;">
+                                <span class="badge bg-success bg-opacity-10 text-success fw-bold">
+                                    <i class="bi bi-star-fill text-warning"></i> {{ product.average_rating }}
+                                </span>
+                                <span class="text-muted">({{ product.total_reviews }})</span>
+                                {% if product.is_low_stock %}
+                                <span class="badge bg-warning-subtle text-warning ms-auto">Only {{ product.stock_quantity }} left</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="sk-product-footer">
+                                <div>
+                                    <span class="sk-price-now">₹{{ product.selling_price }}</span>
+                                    {% if product.original_price > product.selling_price %}
+                                    <span class="sk-price-was">₹{{ product.original_price }}</span>
+                                    {% endif %}
+                                </div>
+
+                                {% if product.is_in_stock %}
+                                <form action="{% url 'cart:add_to_cart' %}" method="POST" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="btn btn-sk-add">
+                                        <i class="bi bi-plus"></i> ADD
+                                    </button>
+                                </form>
+                                {% else %}
+                                <a href="{% url 'smart_features:substitution_detail' product.id %}" class="btn btn-sm btn-outline-secondary rounded-pill" style="font-size: 0.75rem;">
+                                    Substitute
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-search text-muted display-4"></i>
+                    <h5 class="fw-bold mt-3">No Products Found</h5>
+                    <p class="text-muted small">Try adjusting your filters or search keywords.</p>
+                    <a href="{% url 'catalogue:product_list' %}" class="btn btn-sk-primary rounded-pill px-4 mt-2">Clear Filters</a>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav class="mt-5" aria-label="Product pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_category %}&category={{ selected_category.slug }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">Previous</a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}{% if selected_category %}&category={{ selected_category.slug }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_category %}&category={{ selected_category.slug }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

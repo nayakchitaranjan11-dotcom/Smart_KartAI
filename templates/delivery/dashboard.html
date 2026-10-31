@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Delivery Partner Dashboard - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 mb-4 text-white" style="background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold mb-2">
+                    <i class="bi bi-bicycle me-1"></i> Delivery Partner Portal
+                </span>
+                <h2 class="fw-bold mb-1">Welcome, {{ user.get_full_name|default:user.username }}!</h2>
+                <p class="text-white-50 mb-0 small">Vehicle: {{ profile.vehicle_type }} ({{ profile.vehicle_number|default:"Standard" }}) &bull; Rating: ⭐ {{ profile.rating }}</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge {% if profile.is_available %}bg-success{% else %}bg-secondary{% endif %} fs-6 px-3 py-2 rounded-pill">
+                    {% if profile.is_available %}Active / On Duty{% else %}Offline{% endif %}
+                </span>
+                <a href="{% url 'delivery:profile' %}" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                    Edit Profile
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPIs Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white h-100">
+                <span class="text-muted small fw-semibold">Assigned Deliveries</span>
+                <div class="display-6 fw-bold text-primary mt-1 fs-3">{{ assigned_orders.count }}</div>
+                <div class="text-muted small">Active in queue</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white h-100">
+                <span class="text-muted small fw-semibold">Pending Hub Pickups</span>
+                <div class="display-6 fw-bold text-warning mt-1 fs-3">{{ pending_pickups }}</div>
+                <div class="text-muted small">Ready at dark store</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white h-100">
+                <span class="text-muted small fw-semibold">Out for Delivery</span>
+                <div class="display-6 fw-bold text-info mt-1 fs-3">{{ out_for_delivery }}</div>
+                <div class="text-muted small">On the road</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 p-3 bg-white h-100">
+                <span class="text-muted small fw-semibold">Completed Today</span>
+                <div class="display-6 fw-bold text-success mt-1 fs-3">{{ completed_today }}</div>
+                <div class="text-muted small">Total Lifetime: {{ total_completed }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Assigned Orders Queue -->
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-light p-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-task text-primary me-2"></i>Active Delivery Assignments</h5>
+            <a href="{% url 'delivery:completed_orders' %}" class="small text-primary fw-semibold">View Past History &rarr;</a>
+        </div>
+
+        <div class="card-body p-0">
+            {% if assigned_orders %}
+            <div class="list-group list-group-flush">
+                {% for ord in assigned_orders %}
+                <div class="list-group-item p-4 border-bottom">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                        <div>
+                            <span class="badge bg-light text-dark border fs-6 me-2">#{{ ord.order_number }}</span>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ ord.get_status_display }}</span>
+                            <span class="text-muted small ms-2"><i class="bi bi-clock"></i> {{ ord.created_at|timesince }} ago</span>
+                        </div>
+                        <div class="fw-bold text-dark fs-5">
+                            ₹{{ ord.grand_total }} <span class="badge bg-light text-secondary border small">{{ ord.get_payment_method_display }}</span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 small">
+                                <b class="text-dark d-block mb-1"><i class="bi bi-person-fill text-primary"></i> Customer Contact:</b>
+                                <div>{{ ord.shipping_full_name }}</div>
+                                <div class="text-primary fw-bold"><i class="bi bi-telephone"></i> {{ ord.shipping_phone }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 small">
+                                <b class="text-dark d-block mb-1"><i class="bi bi-geo-alt-fill text-danger"></i> Destination:</b>
+                                <div>{{ ord.shipping_street }}</div>
+                                <div>{{ ord.shipping_city }} - {{ ord.shipping_postal_code }}</div>
+                                {% if ord.shipping_landmark %}<div class="text-muted">Landmark: {{ ord.shipping_landmark }}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Transition Buttons -->
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pt-2 border-top">
+                        <a href="{% url 'delivery:order_detail' ord.order_number %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                            View Full Items Checklist
+                        </a>
+
+                        <div class="d-flex gap-2">
+                            {% if ord.status == 'ASSIGNED' or ord.status == 'READY_FOR_PICKUP' %}
+                            <form action="{% url 'delivery:update_status' ord.order_number %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="PICKED_UP">
+                                <button type="submit" class="btn btn-sm btn-warning rounded-pill px-4 fw-bold">
+                                    <i class="bi bi-box-seam me-1"></i> Mark Picked Up from Hub
+                                </button>
+                            </form>
+                            {% elif ord.status == 'PICKED_UP' %}
+                            <form action="{% url 'delivery:update_status' ord.order_number %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="OUT_FOR_DELIVERY">
+                                <button type="submit" class="btn btn-sm btn-info text-white rounded-pill px-4 fw-bold">
+                                    <i class="bi bi-bicycle me-1"></i> Mark Out for Delivery
+                                </button>
+                            </form>
+                            {% elif ord.status == 'OUT_FOR_DELIVERY' %}
+                            <form action="{% url 'delivery:update_status' ord.order_number %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="DELIVERED">
+                                <button type="submit" class="btn btn-sm btn-success rounded-pill px-4 fw-bold">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Confirm Delivered
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-check2-all display-4 text-success d-block mb-2"></i>
+                <h5 class="fw-bold text-dark">No Active Deliveries Assigned</h5>
+                <p class="small mb-0">New store assignments will automatically appear here.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

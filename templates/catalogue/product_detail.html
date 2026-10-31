@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+{% load static core_tags %}
+
+{% block title %}{{ product.name }} - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'catalogue:category_products' product.category.slug %}">{{ product.category.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Main Product Showcase Card -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5 mb-5">
+        <div class="row g-4">
+            
+            <!-- Left: Product Image & Badges -->
+            <div class="col-lg-5 text-center">
+                <div class="p-4 bg-light rounded-4 position-relative d-flex align-items-center justify-content-center" style="min-height: 340px;">
+                    {% if product.discount_percent > 0 %}
+                    <span class="sk-discount-badge" style="font-size: 0.85rem; padding: 4px 10px;">{{ product.discount_percent }}% OFF</span>
+                    {% endif %}
+
+                    {% if product.is_expired %}
+                    <span class="badge bg-danger position-absolute top-0 end-0 m-3 p-2">EXPIRED - UNAVAILABLE</span>
+                    {% endif %}
+
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid" style="max-height: 280px; object-fit: contain;">
+                    {% else %}
+                        <span class="sk-emoji sk-emoji-xl" style="--sk-tile: {{ product|product_tile_color }};" aria-hidden="true">{{ product|product_emoji }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Right: Product Details & Purchase Actions -->
+            <div class="col-lg-7">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-light text-dark border">{{ product.category.name }}</span>
+                    {% if product.brand %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle">{{ product.brand.name }}</span>
+                    {% endif %}
+                </div>
+
+                <h2 class="fw-bold text-dark mb-2">{{ product.name }}</h2>
+                <div class="text-muted fw-semibold mb-3" style="font-size: 0.95rem;">Pack Size: {{ product.unit }}</div>
+
+                <!-- Rating & Reviews Count -->
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="badge bg-success px-2 py-1">
+                        <i class="bi bi-star-fill text-warning"></i> {{ product.average_rating }}
+                    </span>
+                    <span class="text-muted small">({{ product.total_reviews }} Customer Reviews)</span>
+                    <span class="text-muted">&bull;</span>
+                    <span class="text-success small fw-semibold"><i class="bi bi-check-circle-fill"></i> 100% Quality Inspected</span>
+                </div>
+
+                <!-- Pricing Section -->
+                <div class="p-3 bg-light rounded-3 mb-4 d-flex align-items-baseline gap-3">
+                    <span class="display-6 fw-bold text-dark">₹{{ product.selling_price }}</span>
+                    {% if product.original_price > product.selling_price %}
+                    <span class="text-muted fs-5 text-decoration-line-through">₹{{ product.original_price }}</span>
+                    <span class="badge bg-success px-2 py-1">Save ₹{{ product.savings }}</span>
+                    {% endif %}
+                </div>
+
+                <!-- Stock & Expiry Indicators -->
+                <div class="mb-4">
+                    {% if product.is_in_stock %}
+                        {% if product.is_low_stock %}
+                            <div class="alert alert-warning py-2 px-3 small d-inline-flex align-items-center gap-2">
+                                <i class="bi bi-exclamation-triangle-fill"></i> Low Stock: Only <b>{{ product.stock_quantity }} units</b> remaining!
+                            </div>
+                        {% else %}
+                            <div class="text-success small fw-bold">
+                                <i class="bi bi-check-circle-fill"></i> In Stock (Ready for 15-min delivery)
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-danger py-2 px-3 small d-inline-flex align-items-center gap-2">
+                            <i class="bi bi-x-circle-fill"></i> Currently Out of Stock
+                        </div>
+                    {% endif %}
+
+                    {% if product.expiry_date %}
+                    <div class="text-muted small mt-1">
+                        <i class="bi bi-calendar3"></i> Best Before / Expiry: <b>{{ product.expiry_date|date:"d M Y" }}</b>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Add to Cart / Out of Stock Form -->
+                {% if product.is_in_stock %}
+                <form action="{% url 'cart:add_to_cart' %}" method="POST" class="d-flex align-items-center gap-3 mb-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                    <div style="width: 100px;">
+                        <input type="number" name="quantity" class="form-control" value="1" min="1" max="{{ product.stock_quantity }}">
+                    </div>
+                    <button type="submit" class="btn btn-sk-primary px-4 py-2 rounded-pill fw-bold">
+                        <i class="bi bi-bag-plus me-1"></i> Add to Cart
+                    </button>
+                    {% if user.is_authenticated %}
+                    <button type="button" class="btn btn-outline-danger rounded-circle p-2 sk-wishlist-ajax" data-product-id="{{ product.id }}" title="Wishlist">
+                        <i class="bi bi-heart"></i>
+                    </button>
+                    {% endif %}
+                </form>
+                {% else %}
+                <!-- Substitution Callout -->
+                <div class="p-3 bg-light border border-info border-opacity-25 rounded-3 mb-4">
+                    <div class="fw-bold text-info"><i class="bi bi-arrow-repeat me-1"></i> Smart Substitution Available</div>
+                    <p class="text-muted small mb-2">This item is currently out of stock, but our AI engine found in-stock matching substitutes.</p>
+                    <a href="{% url 'smart_features:substitution_detail' product.id %}" class="btn btn-info text-white btn-sm rounded-pill fw-bold">
+                        View Recommended Substitutes &rarr;
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- Description & Nutritional Tags -->
+                <div class="border-top pt-3">
+                    <h6 class="fw-bold mb-2">Product Description</h6>
+                    <p class="text-secondary small leading-relaxed">{{ product.description }}</p>
+
+                    {% if product.tags_list %}
+                    <div class="d-flex flex-wrap gap-1 mt-2">
+                        {% for tag in product.tags_list %}
+                        <span class="badge bg-light text-secondary border small">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Out of Stock Smart Substitutes Preview -->
+    {% if substitutes %}
+    <div class="card shadow-sm border-0 rounded-4 p-4 mb-5 border-start border-4 border-info">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <span class="badge bg-info text-white px-2 py-1">AI Recommendation</span>
+                <h4 class="fw-bold mb-0 mt-1">Recommended In-Stock Substitutes</h4>
+                <p class="text-muted small mb-0">Matched based on category, unit weight, brand reputation, price, and customer ratings</p>
+            </div>
+            <a href="{% url 'smart_features:substitution_detail' product.id %}" class="small text-info fw-bold">Full Analysis &rarr;</a>
+        </div>
+        <div class="row row-cols-1 row-cols-md-3 g-3">
+            {% for sub in substitutes %}
+            <div class="col">
+                <div class="p-3 bg-light rounded-3 border h-100 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-success text-white small">{{ sub.score }}% Match</span>
+                        <span class="text-muted small">{{ sub.product.unit }}</span>
+                    </div>
+                    <h6 class="fw-bold mb-1">{{ sub.product.name }}</h6>
+                    <div class="text-muted small mb-2"><i class="bi bi-lightbulb-fill text-warning me-1"></i>{{ sub.primary_reason }}</div>
+                    <div class="mt-auto d-flex justify-content-between align-items-center pt-2 border-top">
+                        <span class="fw-bold text-dark">₹{{ sub.product.selling_price }}</span>
+                        <form action="{% url 'cart:add_to_cart' %}" method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="product_id" value="{{ sub.product.id }}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn btn-sm btn-sk-primary rounded-pill px-3">
+                                Add Substitute
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Reviews Section -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5 mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h4 class="fw-bold mb-0"><i class="bi bi-chat-square-quote text-success me-2"></i>Verified Customer Reviews</h4>
+                <div class="text-muted small">Only customers with delivered orders can submit verified ratings</div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="display-6 fw-bold text-dark">{{ product.average_rating }}</span>
+                <div>
+                    <div class="text-warning">
+                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i>
+                    </div>
+                    <span class="text-muted small">{{ product.total_reviews }} verified ratings</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Review Form for Eligible Buyers -->
+        {% if can_review %}
+        <div class="p-4 bg-light rounded-4 mb-4 border border-success border-opacity-25">
+            <h6 class="fw-bold text-success mb-2"><i class="bi bi-pencil-square me-1"></i>Write a Verified Purchase Review</h6>
+            <form action="{% url 'catalogue:add_review' product.slug %}" method="POST">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Rating (1 to 5 Stars)</label>
+                        <select name="rating" class="form-select form-select-sm" required>
+                            <option value="5">⭐⭐⭐⭐⭐ (5 Stars)</option>
+                            <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+                            <option value="3">⭐⭐⭐ (3 Stars)</option>
+                            <option value="2">⭐⭐ (2 Stars)</option>
+                            <option value="1">⭐ (1 Star)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-9">
+                        <label class="form-label small fw-semibold">Review Headline</label>
+                        <input type="text" name="headline" class="form-control form-control-sm" placeholder="e.g. Excellent fresh quality & quick delivery!">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Written Review</label>
+                        <textarea name="comment" class="form-control form-control-sm" rows="3" placeholder="Share details of your experience with this grocery item..." required></textarea>
+                    </div>
+                    <div class="col-12 text-end">
+                        <button type="submit" class="btn btn-sk-primary btn-sm rounded-pill px-4 fw-bold">
+                            Submit Verified Review
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Reviews List -->
+        <div class="list-group list-group-flush">
+            {% for review in reviews %}
+            <div class="list-group-item px-0 py-3 border-bottom">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div>
+                        <span class="fw-bold text-dark">{{ review.user.get_full_name|default:review.user.username }}</span>
+                        {% if review.is_verified_purchase %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle ms-2" style="font-size: 0.68rem;">
+                            <i class="bi bi-patch-check-fill"></i> Verified Purchase
+                        </span>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">{{ review.created_at|date:"d M Y" }}</small>
+                </div>
+                <div class="text-warning small mb-1">
+                    {% for i in "12345"|make_list %}
+                        {% if forloop.counter <= review.rating %}
+                            <i class="bi bi-star-fill"></i>
+                        {% else %}
+                            <i class="bi bi-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                    {% if review.headline %}<b class="text-dark ms-2">{{ review.headline }}</b>{% endif %}
+                </div>
+                <p class="text-secondary small mb-0">{{ review.comment }}</p>
+            </div>
+            {% empty %}
+            <div class="text-center py-4 text-muted small">
+                No customer reviews yet. Be the first to order and review this item!
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Frequently Bought Together (association-rule recommendations, added) -->
+    {% if bought_together %}
+    <div class="mb-4">
+        <h4 class="fw-bold mb-1"><i class="bi bi-diagram-3 text-primary me-2"></i>Frequently Bought Together</h4>
+        <p class="text-muted small mb-3">Smart picks based on what other shoppers put in the same basket</p>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3">
+            {% for rec in bought_together %}
+            <div class="col">
+                <div class="sk-product-card">
+                    <div class="sk-product-image-box" style="height: 130px;">
+                        <a href="{% url 'catalogue:product_detail' rec.product.slug %}">
+                            {% if rec.product.image %}
+                                <img src="{{ rec.product.image.url }}" alt="{{ rec.product.name }}" class="sk-product-img">
+                            {% else %}
+                                <span class="sk-emoji sk-emoji-md" style="--sk-tile: {{ rec.product|product_tile_color }};" aria-hidden="true">{{ rec.product|product_emoji }}</span>
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="sk-product-body">
+                        <div class="small text-primary fw-semibold mb-1" style="font-size: 0.72rem;"><i class="bi bi-lightning-charge-fill"></i> {{ rec.reason }}</div>
+                        <a href="{% url 'catalogue:product_detail' rec.product.slug %}" class="sk-product-title text-decoration-none">{{ rec.product.name }}</a>
+                        <div class="sk-product-footer">
+                            <span class="sk-price-now">₹{{ rec.product.selling_price }}</span>
+                            <form action="{% url 'cart:add_to_cart' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="product_id" value="{{ rec.product.id }}">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn btn-sk-add"><i class="bi bi-plus"></i> ADD</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Similar Products Recommendations -->
+    {% if similar_products %}
+    <div class="mb-4">
+        <h4 class="fw-bold mb-3"><i class="bi bi-grid text-success me-2"></i>You Might Also Like</h4>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3">
+            {% for sim in similar_products %}
+            <div class="col">
+                <div class="sk-product-card">
+                    <div class="sk-product-image-box">
+                        {% if sim.discount_percent > 0 %}
+                        <span class="sk-discount-badge">{{ sim.discount_percent }}% OFF</span>
+                        {% endif %}
+                        <a href="{% url 'catalogue:product_detail' sim.slug %}">
+                            {% if sim.image %}
+                                <img src="{{ sim.image.url }}" alt="{{ sim.name }}" class="sk-product-img">
+                            {% else %}
+                                <span class="sk-emoji sk-emoji-lg" style="--sk-tile: {{ sim|product_tile_color }};" aria-hidden="true">{{ sim|product_emoji }}</span>
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="sk-product-body">
+                        <div class="sk-product-unit">{{ sim.unit }}</div>
+                        <a href="{% url 'catalogue:product_detail' sim.slug %}" class="sk-product-title text-decoration-none">
+                            {{ sim.name }}
+                        </a>
+                        <div class="sk-product-footer">
+                            <span class="sk-price-now">₹{{ sim.selling_price }}</span>
+                            <form action="{% url 'cart:add_to_cart' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="product_id" value="{{ sim.id }}">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn btn-sk-add"><i class="bi bi-plus"></i> ADD</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

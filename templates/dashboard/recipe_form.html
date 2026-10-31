@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block title %}{{ action }} - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-egg-fried text-warning me-2"></i>{{ action }}</h3>
+            <p class="text-muted small mb-0">Ingredients mapped to catalogue products power the Recipe-to-Cart feature</p>
+        </div>
+        <a href="{% url 'dashboard:recipes_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">&larr; All Recipes</a>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row g-4">
+            <!-- Recipe basics -->
+            <div class="col-lg-5">
+                <div class="card shadow-sm border-0 rounded-4 p-4">
+                    <h5 class="fw-bold mb-3">Recipe Details</h5>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Recipe Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" value="{{ recipe.name|default:'' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Short Description</label>
+                        <textarea name="description" class="form-control" rows="2">{{ recipe.description|default:'' }}</textarea>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Cuisine</label>
+                            <input type="text" name="cuisine" class="form-control" value="{{ recipe.cuisine|default:'North Indian' }}">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Diet Type</label>
+                            <select name="diet_type" class="form-select">
+                                {% for val, label in diet_choices %}
+                                <option value="{{ val }}" {% if recipe.diet_type == val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <label class="form-label small fw-semibold">Prep (min)</label>
+                            <input type="number" min="1" name="prep_time_minutes" class="form-control" value="{{ recipe.prep_time_minutes|default:10 }}">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-semibold">Cook (min)</label>
+                            <input type="number" min="1" name="cook_time_minutes" class="form-control" value="{{ recipe.cook_time_minutes|default:20 }}">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-semibold">Serves</label>
+                            <input type="number" min="1" name="base_servings" class="form-control" value="{{ recipe.base_servings|default:4 }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Difficulty</label>
+                        <select name="difficulty" class="form-select">
+                            {% for val, label in difficulty_choices %}
+                            <option value="{{ val }}" {% if recipe.difficulty == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Cooking Instructions (one step per line)</label>
+                        <textarea name="instructions" class="form-control" rows="6">{{ recipe.instructions|default:'' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Recipe Photo (optional)</label>
+                        <input type="file" name="image" accept="image/*" class="form-control">
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="isFeatured" name="is_featured" {% if recipe.is_featured %}checked{% endif %}>
+                        <label class="form-check-label small" for="isFeatured">Feature on home page</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ingredient rows -->
+            <div class="col-lg-7">
+                <div class="card shadow-sm border-0 rounded-4 p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">Ingredients <span class="text-muted small fw-normal">(quantities for the base servings)</span></h5>
+                        <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" id="addIngredientRow"><i class="bi bi-plus-lg"></i> Add Row</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle small mb-0">
+                            <thead class="table-light text-muted text-uppercase" style="font-size: 0.72rem;">
+                                <tr><th style="min-width:140px;">Ingredient</th><th style="width:90px;">Qty</th><th style="width:90px;">Unit</th><th style="min-width:180px;">Mapped Product</th><th>Optional</th><th></th></tr>
+                            </thead>
+                            <tbody id="ingredientRows">
+                                {% for ing in ingredient_rows %}
+                                <tr class="ing-row">
+                                    <td>
+                                        <input type="text" name="ing_name" class="form-control form-control-sm" value="{{ ing.ingredient_name|default:'' }}" placeholder="e.g. Tomatoes">
+                                        <input type="text" name="ing_notes" class="form-control form-control-sm mt-1" value="{{ ing.notes|default:'' }}" placeholder="notes (optional)">
+                                    </td>
+                                    <td><input type="number" step="0.01" min="0" name="ing_qty" class="form-control form-control-sm" value="{{ ing.quantity_per_base_servings|default:'' }}"></td>
+                                    <td>
+                                        <select name="ing_unit" class="form-select form-select-sm">
+                                            {% for u in "g,kg,ml,l,tbsp,tsp,piece,pack"|make_list_split %}
+                                            <option value="{{ u }}" {% if ing.unit == u %}selected{% endif %}>{{ u }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="ing_product" class="form-select form-select-sm">
+                                            <option value="">— not mapped —</option>
+                                            {% for p in products %}
+                                            <option value="{{ p.id }}" {% if ing.product_id == p.id %}selected{% endif %}>{{ p.name }} ({{ p.unit }})</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td class="text-center"><input type="checkbox" class="form-check-input ing-optional" name="ing_optional" value="{{ forloop.counter0 }}" {% if ing.is_optional %}checked{% endif %}></td>
+                                    <td><button type="button" class="btn btn-sm btn-outline-danger rounded-circle remove-row" title="Remove"><i class="bi bi-x"></i></button></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="small text-muted mt-2"><i class="bi bi-lightbulb text-warning"></i> Map each ingredient to a product so customers can add it to cart in one click. Pack counts are calculated automatically from the quantity and unit.</div>
+                </div>
+                <div class="text-end mt-3">
+                    <button type="submit" class="btn btn-sk-primary rounded-pill px-5 py-2 fw-bold"><i class="bi bi-check2-circle"></i> Save Recipe</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add / remove ingredient rows; keep the "optional" checkbox values equal to the row index
+(function () {
+    const body = document.getElementById('ingredientRows');
+    function renumber() {
+        body.querySelectorAll('.ing-row').forEach((row, idx) => {
+            row.querySelector('.ing-optional').value = idx;
+        });
+    }
+    document.getElementById('addIngredientRow').addEventListener('click', function () {
+        const template = body.querySelector('.ing-row');
+        const row = template.cloneNode(true);
+        row.querySelectorAll('input[type=text], input[type=number]').forEach(i => i.value = '');
+        row.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+        row.querySelector('.ing-optional').checked = false;
+        body.appendChild(row);
+        renumber();
+    });
+    body.addEventListener('click', function (e) {
+        const btn = e.target.closest('.remove-row');
+        if (!btn) return;
+        if (body.querySelectorAll('.ing-row').length > 1) {
+            btn.closest('.ing-row').remove();
+            renumber();
+        }
+    });
+})();
+</script>
+{% endblock %}

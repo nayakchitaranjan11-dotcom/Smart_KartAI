@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Saved Delivery Addresses - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-geo-alt-fill text-success me-2"></i>Delivery Addresses</h3>
+            <p class="text-muted small mb-0">Manage your saved addresses for fast 15-minute checkout</p>
+        </div>
+        <a href="{% url 'accounts:address_add' %}" class="btn btn-sk-primary rounded-pill px-3 py-2 fw-semibold">
+            <i class="bi bi-plus-lg me-1"></i> Add New Address
+        </a>
+    </div>
+
+    <div class="row g-3">
+        {% for address in addresses %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0 rounded-4 p-4 position-relative {% if address.is_default %}border border-success border-2{% endif %}">
+                {% if address.is_default %}
+                <span class="badge bg-success position-absolute top-0 end-0 m-3 px-2 py-1 rounded-pill">
+                    <i class="bi bi-check-circle-fill me-1"></i> Default
+                </span>
+                {% endif %}
+
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-light text-dark border px-2 py-1">
+                        {{ address.get_address_type_display }}
+                    </span>
+                    <h6 class="fw-bold mb-0 text-dark">{{ address.full_name }}</h6>
+                </div>
+
+                <div class="text-secondary small mb-3 flex-grow-1">
+                    <p class="mb-1">{{ address.street_address }}</p>
+                    {% if address.landmark %}<p class="mb-1 text-muted">Landmark: {{ address.landmark }}</p>{% endif %}
+                    <p class="mb-1">{{ address.city }}, {{ address.state }} - <b>{{ address.postal_code }}</b></p>
+                    <p class="mb-0 text-dark"><i class="bi bi-telephone me-1"></i> {{ address.phone_number }}</p>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between border-top pt-3 mt-auto">
+                    <div>
+                        <a href="{% url 'accounts:address_edit' address.id %}" class="btn btn-sm btn-outline-secondary rounded-pill me-1">
+                            Edit
+                        </a>
+                        <a href="{% url 'accounts:address_delete' address.id %}" class="btn btn-sm btn-outline-danger rounded-pill">
+                            Delete
+                        </a>
+                    </div>
+                    {% if not address.is_default %}
+                    <a href="{% url 'accounts:address_set_default' address.id %}" class="small text-success fw-bold text-decoration-none">
+                        Set Default
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-geo text-muted display-4"></i>
+            <h5 class="fw-bold mt-3">No Saved Addresses Found</h5>
+            <p class="text-muted small">Add a delivery address to speed up your checkout process.</p>
+            <a href="{% url 'accounts:address_add' %}" class="btn btn-sk-primary rounded-pill px-4 mt-2">Add Your First Address</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

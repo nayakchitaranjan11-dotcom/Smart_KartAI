@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Order #{{ order.order_number }} - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Breadcrumb & Top Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small mb-1">
+                    <li class="breadcrumb-item"><a href="{% url 'orders:order_history' %}">My Orders</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">#{{ order.order_number }}</li>
+                </ol>
+            </nav>
+            <h3 class="fw-bold mb-0">Order Details</h3>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'orders:order_tracking' order.order_number %}" class="btn btn-sk-primary btn-sm rounded-pill px-3 fw-bold">
+                <i class="bi bi-geo-alt-fill me-1"></i> Track Order
+            </a>
+            <a href="{% url 'orders:download_invoice' order.order_number %}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                <i class="bi bi-file-earmark-pdf me-1"></i> Tax Invoice
+            </a>
+            <form action="{% url 'orders:reorder' order.order_number %}" method="POST" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-semibold">
+                    <i class="bi bi-arrow-repeat me-1"></i> Order Again
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        
+        <!-- Left: Items & Status Timeline -->
+        <div class="col-lg-8">
+            
+            <!-- Items Table Card -->
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-light p-3 border-bottom">
+                    <h6 class="fw-bold mb-0 text-dark">Ordered Items ({{ order.total_items_count }})</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light small text-muted text-uppercase">
+                            <tr>
+                                <th style="width: 50%;">Product Description</th>
+                                <th style="width: 25%;" class="text-center">Quantity</th>
+                                <th style="width: 25%;" class="text-end">Total Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark small">{{ item.product_name }}</div>
+                                    <span class="text-muted" style="font-size: 0.75rem;">{{ item.product_unit }} &bull; ₹{{ item.unit_price }}/unit</span>
+                                </td>
+                                <td class="text-center fw-semibold small">{{ item.quantity }}</td>
+                                <td class="text-end fw-bold text-dark">₹{{ item.total_price }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Status History Timeline -->
+            <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-clock-history text-success me-2"></i>Status History</h6>
+                <div class="list-group list-group-flush small">
+                    {% for hist in status_history %}
+                    <div class="list-group-item px-0 py-2 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark"><i class="bi bi-check-circle-fill text-success me-1"></i> {{ hist.get_status_display }}</span>
+                            <span class="text-muted">{{ hist.created_at|date:"d M Y, h:i A" }}</span>
+                        </div>
+                        {% if hist.comment %}<div class="text-muted small ms-3">{{ hist.comment }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Order Cancellation Option if Eligible -->
+            {% if order.is_cancellable %}
+            <div class="card shadow-sm border-danger border-opacity-25 bg-danger bg-opacity-10 rounded-4 p-4">
+                <h6 class="fw-bold text-danger mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>Need to Cancel This Order?</h6>
+                <p class="text-secondary small mb-3">Orders can be cancelled before dispatch. Inventory will be automatically returned to our warehouse stock.</p>
+                <form action="{% url 'orders:cancel_order' order.order_number %}" method="POST">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <input type="text" name="cancellation_reason" class="form-control form-control-sm" placeholder="Reason for cancellation (optional)">
+                        <button type="submit" class="btn btn-sm btn-danger fw-bold px-3">Cancel Order</button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Right: Address & Pricing Breakdown -->
+        <div class="col-lg-4">
+            
+            <!-- Delivery Info Card -->
+            <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-geo-alt-fill text-success me-1"></i>Delivery Details</h6>
+                <div class="small lh-sm text-secondary">
+                    <div class="fw-bold text-dark mb-1">{{ order.shipping_full_name }}</div>
+                    <div class="mb-1">{{ order.shipping_street }}</div>
+                    {% if order.shipping_landmark %}<div class="text-muted mb-1">Landmark: {{ order.shipping_landmark }}</div>{% endif %}
+                    <div class="mb-2">{{ order.shipping_city }}, {{ order.shipping_state }} - <b>{{ order.shipping_postal_code }}</b></div>
+                    <div class="text-dark mb-2"><i class="bi bi-telephone me-1"></i> {{ order.shipping_phone }}</div>
+                    <hr>
+                    <div class="mb-1 text-muted">Delivery Slot: <b class="text-dark">{{ order.get_delivery_slot_display }}</b></div>
+                    {% if order.delivery_partner %}
+                    <div class="mb-1 text-muted">Assigned Partner: <b class="text-dark">{{ order.delivery_partner.get_full_name|default:order.delivery_partner.username }}</b></div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Price Breakdown -->
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <h6 class="fw-bold mb-3">Payment Summary</h6>
+                
+                <div class="d-flex justify-content-between text-secondary mb-2 small">
+                    <span>Subtotal</span>
+                    <span>₹{{ order.subtotal }}</span>
+                </div>
+
+                <div class="d-flex justify-content-between text-success mb-2 small">
+                    <span>Product Discounts</span>
+                    <span>- ₹{{ order.product_discount }}</span>
+                </div>
+
+                {% if order.coupon_code %}
+                <div class="d-flex justify-content-between text-success mb-2 small">
+                    <span>Coupon ({{ order.coupon_code }})</span>
+                    <span>- ₹{{ order.coupon_discount }}</span>
+                </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-between text-secondary mb-2 small">
+                    <span>Delivery Fee</span>
+                    <span>{% if order.delivery_fee == 0 %}FREE{% else %}₹{{ order.delivery_fee }}{% endif %}</span>
+                </div>
+
+                <hr class="my-2">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fw-bold text-dark">Grand Total</span>
+                    <span class="fw-bold fs-5 text-dark">₹{{ order.grand_total }}</span>
+                </div>
+
+                <div class="p-2 bg-light rounded-3 small">
+                    <div><b>Payment Mode:</b> {{ order.get_payment_method_display }}</div>
+                    <div><b>Payment Status:</b> <span class="badge bg-success-subtle text-success border border-success-subtle">{{ order.get_payment_status_display }}</span></div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

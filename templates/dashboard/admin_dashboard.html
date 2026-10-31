@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+
+{% block title %}Administrator Control Center - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+
+    <!-- Top Admin Header -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 mb-4 text-white" style="background: linear-gradient(135deg, #064E3B 0%, #0F5132 50%, #022c22 100%);">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold mb-2">
+                    <i class="bi bi-shield-lock-fill me-1"></i> Executive Admin Center
+                </span>
+                <h2 class="fw-bold mb-1">SmartKart AI Business Analytics</h2>
+                <p class="text-white-50 mb-0 small">Real-time operational metrics, automated inventory alerts &amp; order fulfillment oversight</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{% url 'dashboard:alerts' %}" class="btn btn-warning text-dark btn-sm rounded-pill fw-bold px-3">
+                    <i class="bi bi-bell-fill me-1"></i> Alerts ({{ low_stock_count|add:near_expiry_count }})
+                </a>
+                <a href="{% url 'dashboard:export_sales_csv' %}" class="btn btn-outline-light btn-sm rounded-pill fw-bold px-3">
+                    <i class="bi bi-download me-1"></i> Export Sales CSV
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation Pills -->
+    <div class="card shadow-sm border-0 rounded-4 p-3 mb-4">
+        <div class="d-flex gap-2 overflow-auto py-1">
+            <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-sm btn-sk-primary rounded-pill px-3 fw-semibold">Dashboard</a>
+            <a href="{% url 'dashboard:products_list' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Products ({{ total_products }})</a>
+            <a href="{% url 'dashboard:inventory' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Inventory Stock</a>
+            <a href="{% url 'dashboard:categories_list' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Categories</a>
+            <a href="{% url 'dashboard:orders_list' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Orders ({{ total_orders }})</a>
+            <a href="{% url 'dashboard:customers_list' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Customers ({{ total_users }})</a>
+            <a href="{% url 'dashboard:delivery_staff_list' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Delivery Personnel</a>
+            <a href="{% url 'dashboard:coupons_list' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Coupons</a>
+            <a href="{% url 'dashboard:recipes_list' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Recipes</a>
+            <a href="{% url 'dashboard:expiry_deals_list' %}" class="btn btn-sm btn-outline-danger rounded-pill px-3">Expiry Deals</a>
+            <a href="{% url 'dashboard:reviews_list' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Reviews</a>
+            <a href="{% url 'dashboard:contact_messages' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Support Inbox{% if open_messages_count %} <span class="badge bg-danger">{{ open_messages_count }}</span>{% endif %}</a>
+            <a href="/admin/" class="btn btn-sm btn-outline-dark rounded-pill px-3" title="Built-in Django admin (raw database tables)"><i class="bi bi-database-gear"></i> Django Admin</a>
+        </div>
+    </div>
+
+    <!-- 1. Executive Metric KPI Cards Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card shadow-sm border-0 rounded-4 p-4 h-100 bg-white">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="text-muted small fw-semibold text-uppercase">Total Sales Revenue</span>
+                        <div class="display-6 fw-bold text-success mt-1 fs-3">₹{{ total_revenue }}</div>
+                        <div class="text-muted small mt-1">Today: <b>₹{{ today_sales }}</b></div>
+                    </div>
+                    <div class="sk-logo-icon bg-success bg-opacity-10 text-success" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                        <i class="bi bi-currency-rupee"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card shadow-sm border-0 rounded-4 p-4 h-100 bg-white">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="text-muted small fw-semibold text-uppercase">Total Customer Orders</span>
+                        <div class="display-6 fw-bold text-primary mt-1 fs-3">{{ total_orders }}</div>
+                        <div class="text-muted small mt-1">Pending Processing: <b class="text-warning">{{ pending_orders }}</b></div>
+                    </div>
+                    <div class="sk-logo-icon bg-primary bg-opacity-10 text-primary" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card shadow-sm border-0 rounded-4 p-4 h-100 bg-white">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="text-muted small fw-semibold text-uppercase">Catalogue &amp; Users</span>
+                        <div class="display-6 fw-bold text-dark mt-1 fs-3">{{ total_products }} Items</div>
+                        <div class="text-muted small mt-1">{{ total_users }} Registered Customers</div>
+                    </div>
+                    <div class="sk-logo-icon bg-dark bg-opacity-10 text-dark" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card shadow-sm border-0 rounded-4 p-4 h-100 bg-white">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="text-muted small fw-semibold text-uppercase">Alerts &amp; Rescues</span>
+                        <div class="display-6 fw-bold text-danger mt-1 fs-3">{{ low_stock_count }} Low Stock</div>
+                        <div class="text-muted small mt-1">{{ near_expiry_count }} Near Expiry &bull; <b>{{ rescued_total }} Rescued</b></div>
+                    </div>
+                    <div class="sk-logo-icon bg-danger bg-opacity-10 text-danger" style="width: 44px; height: 44px; font-size: 1.3rem;">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Chart.js Graphs Row -->
+    <div class="row g-4 mb-4">
+        
+        <!-- Revenue Trend Chart -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-graph-up text-success me-2"></i>Revenue Performance Trend</h5>
+                    <span class="badge bg-light text-secondary border">6-Month View</span>
+                </div>
+                <div style="height: 280px; position: relative;">
+                    <canvas id="adminRevenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Status Doughnut Chart -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
+                <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart-fill text-primary me-2"></i>Order Statuses</h5>
+                <div style="height: 250px; position: relative;">
+                    <canvas id="adminStatusChart"></canvas>
+                </div>
+                <div class="d-flex justify-content-between text-muted small mt-2 pt-2 border-top">
+                    <span>Delivered: <b>{{ delivered_orders }}</b></span>
+                    <span>In Pipeline: <b>{{ pending_orders }}</b></span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 3. Tables Row: Best Sellers & Recent Orders -->
+    <div class="row g-4 mb-4">
+        
+        <!-- Best Selling Products -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-trophy-fill text-warning me-2"></i>Top Selling Products</h5>
+                    <a href="{% url 'dashboard:products_list' %}" class="small text-success fw-semibold">View Catalogue</a>
+                </div>
+
+                <div class="list-group list-group-flush">
+                    {% for item in best_sellers %}
+                    <div class="list-group-item px-0 py-2 border-bottom d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-bold text-dark small d-block">{{ item.product__name }}</span>
+                            <span class="text-muted" style="font-size: 0.75rem;">{{ item.product__category__name }}</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-success small">{{ item.total_sold }} Sold</span>
+                            <div class="text-muted small" style="font-size: 0.72rem;">₹{{ item.total_earned }} earned</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted small">
+                        No sales data recorded yet.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Customer Orders -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-clock-history text-primary me-2"></i>Recent Orders</h5>
+                    <a href="{% url 'dashboard:orders_list' %}" class="small text-primary fw-semibold">All Orders ({{ total_orders }}) &rarr;</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light small text-muted text-uppercase">
+                            <tr>
+                                <th>Order</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ord in recent_orders %}
+                            <tr>
+                                <td>
+                                    <span class="fw-bold text-dark small">#{{ ord.order_number }}</span>
+                                    <div class="text-muted" style="font-size: 0.72rem;">{{ ord.created_at|timesince }} ago</div>
+                                </td>
+                                <td class="small">{{ ord.shipping_full_name }}</td>
+                                <td>
+                                    {% if ord.status == 'DELIVERED' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle small">Delivered</span>
+                                    {% elif ord.status == 'CANCELLED' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle small">Cancelled</span>
+                                    {% else %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle small">{{ ord.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold text-dark small">₹{{ ord.grand_total }}</td>
+                                <td>
+                                    <a href="{% url 'dashboard:order_detail' ord.order_number %}" class="btn btn-sm btn-outline-dark rounded-pill" style="font-size: 0.75rem;">
+                                        Manage
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted small">No recent orders.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{# extra_js must live OUTSIDE the content block, otherwise Django renders it twice (charts were created twice) #}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // 1. Revenue Chart
+    const revCtx = document.getElementById('adminRevenueChart');
+    if (revCtx) {
+        new Chart(revCtx, {
+            type: 'line',
+            data: {
+                labels: {{ month_labels|safe }},
+                datasets: [{
+                    label: 'Monthly Sales (₹)',
+                    data: {{ month_revenue|safe }},
+                    borderColor: '#0F5132',
+                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                    tension: 0.35,
+                    fill: true,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#10B981',
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { callback: val => '₹' + val } }
+                }
+            }
+        });
+    }
+
+    // 2. Status Chart
+    const statusCtx = document.getElementById('adminStatusChart');
+    if (statusCtx) {
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ status_labels|safe }},
+                datasets: [{
+                    data: {{ status_values|safe }},
+                    backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#6366F1', '#059669', '#EF4444'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Recipes - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-egg-fried text-warning me-2"></i>Recipe Management (Recipe-to-Cart)</h3>
+            <p class="text-muted small mb-0">Manage recipe catalog and mapped grocery store ingredients</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                &larr; Admin Dashboard
+            </a>
+            <a href="{% url 'smart_features:recipe_list' %}" class="btn btn-warning text-dark btn-sm rounded-pill px-3 fw-bold">
+                View Public Recipes &rarr;
+            </a>
+            <a href="{% url 'dashboard:recipe_create' %}" class="btn btn-sk-primary btn-sm rounded-pill px-3 fw-bold">
+                <i class="bi bi-plus-lg"></i> Add Recipe
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-muted text-uppercase">
+                    <tr>
+                        <th>Recipe Title</th>
+                        <th>Cuisine</th>
+                        <th>Diet Type</th>
+                        <th>Prep + Cook Time</th>
+                        <th>Base Servings</th>
+                        <th>Ingredients Count</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in recipes %}
+                    <tr>
+                        <td class="fw-bold text-dark small">
+                            <a href="{% url 'smart_features:recipe_detail' rec.slug %}" target="_blank" class="text-dark text-decoration-none">
+                                {{ rec.name }}
+                            </a>
+                            {% if rec.is_featured %}<span class="badge bg-warning text-dark ms-1">Featured</span>{% endif %}
+                        </td>
+                        <td class="small">{{ rec.cuisine }}</td>
+                        <td>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">{{ rec.get_diet_type_display }}</span>
+                        </td>
+                        <td class="small">{{ rec.prep_time_minutes }}m + {{ rec.cook_time_minutes }}m ({{ rec.total_time_minutes }}m)</td>
+                        <td class="small">{{ rec.base_servings }} Persons</td>
+                        <td><span class="badge bg-light text-dark border">{{ rec.ing_count }} ingredients</span></td>
+                        <td class="text-center text-nowrap">
+                            <a href="{% url 'smart_features:recipe_detail' rec.slug %}" target="_blank" class="btn btn-sm btn-outline-dark rounded-pill px-3" style="font-size: 0.75rem;">
+                                Preview &rarr;
+                            </a>
+                            <a href="{% url 'dashboard:recipe_edit' rec.id %}" class="btn btn-sm btn-outline-primary rounded-circle" title="Edit recipe">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form action="{% url 'dashboard:recipe_delete' rec.id %}" method="POST" class="d-inline" onsubmit="return confirm('Delete recipe {{ rec.name|escapejs }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" title="Delete recipe"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">No recipes found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

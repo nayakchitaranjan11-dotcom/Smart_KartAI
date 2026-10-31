@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Delivery Personnel - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-bicycle text-primary me-2"></i>Delivery Partner Management</h3>
+            <p class="text-muted small mb-0">Register and manage local delivery partners, vehicles, and order capacity</p>
+        </div>
+        <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            &larr; Admin Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+        
+        <!-- Left: Add New Delivery Staff Form -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-person-plus-fill text-primary me-2"></i>Register Delivery Partner</h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">First Name</label>
+                        <input type="text" name="first_name" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Last Name</label>
+                        <input type="text" name="last_name" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Username</label>
+                        <input type="text" name="username" class="form-control form-control-sm" placeholder="e.g. rider_rahul" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Email Address</label>
+                        <input type="email" name="email" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Phone Number</label>
+                        <input type="tel" name="phone" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Vehicle Type</label>
+                        <input type="text" name="vehicle_type" class="form-control form-control-sm" value="Bike / Electric Scooter">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Vehicle Number</label>
+                        <input type="text" name="vehicle_number" class="form-control form-control-sm" placeholder="e.g. DL 01 AB 1234">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Temporary Password</label>
+                        <input type="password" name="password" class="form-control form-control-sm" value="password123" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold">
+                        Create Delivery Account
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right: Delivery Staff Table -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-muted text-uppercase">
+                            <tr>
+                                <th>Delivery Hero</th>
+                                <th>Vehicle Info</th>
+                                <th>Status</th>
+                                <th>Rating</th>
+                                <th>Delivered Count</th>
+                                <th class="text-center">Duty</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for staff in delivery_staff %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark small">{{ staff.get_full_name|default:staff.username }}</div>
+                                    <span class="text-muted" style="font-size: 0.72rem;">@{{ staff.username }} &bull; {{ staff.delivery_profile.phone }}</span>
+                                </td>
+                                <td class="small">
+                                    <div>{{ staff.delivery_profile.vehicle_type }}</div>
+                                    <span class="text-muted" style="font-size: 0.72rem;">{{ staff.delivery_profile.vehicle_number|default:"No Plate" }}</span>
+                                </td>
+                                <td>
+                                    {% if staff.delivery_profile.is_available %}
+                                        <span class="badge bg-success">On Duty</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Offline</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning text-dark">⭐ {{ staff.delivery_profile.rating }}</span>
+                                </td>
+                                <td class="fw-bold text-dark small">{{ staff.delivery_profile.total_deliveries }} Orders</td>
+                                <td class="text-center">
+                                    <form action="{% url 'dashboard:delivery_partner_toggle' staff.id %}" method="POST" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill px-3" style="font-size: 0.72rem;">
+                                            {% if staff.delivery_profile.is_available %}Set Offline{% else %}Set On Duty{% endif %}
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">No delivery partners registered yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

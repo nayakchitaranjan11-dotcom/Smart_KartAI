@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}500 Server Error - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center my-5">
+    <div class="display-1 text-warning fw-bold"><i class="bi bi-cone-striped"></i> 500</div>
+    <h2 class="fw-bold mt-3">Internal Server Error</h2>
+    <p class="text-muted lead max-w-md mx-auto">
+        Something unexpected occurred on our end. Please try refreshing or return to the homepage.
+    </p>
+    <div class="mt-4">
+        <a href="{% url 'core:home' %}" class="btn btn-sk-primary px-4 py-2 me-2">Go to Home</a>
+        <a href="{% url 'core:contact' %}" class="btn btn-outline-dark px-4 py-2">Contact Support</a>
+    </div>
+</div>
+{% endblock %}

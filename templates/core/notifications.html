@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold mb-0"><i class="bi bi-bell-fill text-success me-2"></i>Notifications</h3>
+                <span class="text-muted small">{{ notifications|length }} notification{{ notifications|length|pluralize }}</span>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="list-group list-group-flush">
+                    {% for notif in notifications %}
+                    <div class="list-group-item p-3 {% if not notif.is_read %}bg-light border-start border-success border-3{% endif %}">
+                        <div class="d-flex w-100 justify-content-between align-items-start mb-1">
+                            <h6 class="mb-1 fw-bold text-dark">
+                                {% if notif.notification_type == 'ORDER' %}
+                                    <i class="bi bi-box-seam text-primary me-1"></i>
+                                {% elif notif.notification_type == 'BUDGET' %}
+                                    <i class="bi bi-wallet2 text-warning me-1"></i>
+                                {% elif notif.notification_type == 'RESCUE' %}
+                                    <i class="bi bi-fire text-danger me-1"></i>
+                                {% else %}
+                                    <i class="bi bi-info-circle text-success me-1"></i>
+                                {% endif %}
+                                {{ notif.title }}
+                            </h6>
+                            <small class="text-muted">{{ notif.created_at|timesince }} ago</small>
+                        </div>
+                        <p class="mb-2 text-secondary small">{{ notif.message }}</p>
+                        {% if notif.link_url %}
+                        <a href="{{ notif.link_url }}" class="btn btn-sm btn-outline-success rounded-pill px-3" style="font-size: 0.78rem;">
+                            View Details &rarr;
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-bell-slash text-muted display-4"></i>
+                        <h5 class="fw-bold mt-3">No Notifications</h5>
+                        <p class="text-muted small">You're all caught up! Order updates and budget alerts will appear here.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

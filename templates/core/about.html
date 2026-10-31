@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}About SmartKart AI - Project Overview & System Architecture{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="text-center mb-5">
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold">
+                    College Major Project Overview
+                </span>
+                <h1 class="fw-bold mt-2 display-6">About SmartKart AI</h1>
+                <p class="lead text-muted">
+                    An Intelligent Grocery Delivery &amp; Household Shopping Management System Using Python &amp; Django.
+                </p>
+            </div>
+
+            <!-- Card 1: Problem Statement & Objectives -->
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-body p-4 p-md-5">
+                    <h4 class="fw-bold text-success mb-3"><i class="bi bi-bullseye me-2"></i>Problem Statement &amp; Objectives</h4>
+                    <p class="text-secondary">
+                        Traditional quick-commerce platforms focus purely on transactional ordering without assisting consumers with budget overspending, manual grocery list re-typing, recipe ingredient estimation, or food-waste reduction. SmartKart AI bridges this gap by infusing smart, explainable algorithmic intelligence directly into the quick-commerce experience.
+                    </p>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <div class="fw-bold text-dark"><i class="bi bi-check-circle-fill text-success me-2"></i>Household Budget Management</div>
+                                <div class="text-muted small">Tracks delivered &amp; cart spend against user-defined monthly limits with live 80% threshold warnings.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <div class="fw-bold text-dark"><i class="bi bi-check-circle-fill text-success me-2"></i>AI List Digitization</div>
+                                <div class="text-muted small">Transforms handwritten or printed shopping notes into structured cart items using OCR and token fuzzy matching.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <div class="fw-bold text-dark"><i class="bi bi-check-circle-fill text-success me-2"></i>Food Waste Rescue</div>
+                                <div class="text-muted small">Near-expiry inventory deals at deep discounts with urgency color-coding to minimize spoilage.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3">
+                                <div class="fw-bold text-dark"><i class="bi bi-check-circle-fill text-success me-2"></i>Explainable Product Substitution</div>
+                                <div class="text-muted small">6-factor scoring algorithm recommending in-stock alternatives when products are out of stock.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Technology Stack -->
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-body p-4 p-md-5">
+                    <h4 class="fw-bold text-primary mb-3"><i class="bi bi-cpu me-2"></i>System Architecture &amp; Technology Stack</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 25%;">Layer</th>
+                                    <th style="width: 35%;">Technology</th>
+                                    <th style="width: 40%;">Purpose</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="fw-bold">Backend Framework</td>
+                                    <td>Python 3 &bull; Django 5.x</td>
+                                    <td>Model-View-Template architecture, ORM, Auth, Sessions, Messages</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Database</td>
+                                    <td>SQLite (Relational ORM)</td>
+                                    <td>Zero-setup local database with strict Decimal monetary precision</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Image Processing &amp; OCR</td>
+                                    <td>Pillow (PIL) &bull; pytesseract</td>
+                                    <td>Grayscale enhancement, sharpening, character recognition &amp; manual fallback</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Matching Algorithms</td>
+                                    <td>Python difflib / Token Scorers</td>
+                                    <td>Fuzzy catalogue matching &amp; multi-factor substitution scoring</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">PDF Invoice Generation</td>
+                                    <td>ReportLab</td>
+                                    <td>Downloadable tax invoice generation with snapshot tables</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Frontend UI / UX</td>
+                                    <td>HTML5, CSS3, JS, Bootstrap 5.3, Chart.js</td>
+                                    <td>Mobile-first responsive UI, interactive dashboards &amp; live suggestions</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Academic Disclaimer -->
+            <div class="alert alert-warning border-warning shadow-sm rounded-4 p-4">
+                <h5 class="fw-bold text-dark"><i class="bi bi-mortarboard-fill me-2"></i>Academic Project Disclaimer</h5>
+                <p class="mb-0 text-dark small">
+                    SmartKart AI is designed and implemented exclusively for major project demonstration and academic evaluation. All online payment options (UPI, Credit/Debit Card) and delivery tracking interfaces are fully simulated in software without actual monetary transactions.
+                </p>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

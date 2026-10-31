@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Promotional Coupons - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-ticket-perforated text-warning me-2"></i>Coupon Code Management</h3>
+            <p class="text-muted small mb-0">Create percentage or flat discount vouchers with minimum order limits</p>
+        </div>
+        <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            &larr; Admin Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+        
+        <!-- Left: Create Coupon Form -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-plus-circle text-warning me-2"></i>Create New Coupon</h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Coupon Code <span class="text-danger">*</span></label>
+                        <input type="text" name="code" class="form-control form-control-sm text-uppercase" placeholder="e.g. FESTIVE20" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Description</label>
+                        <input type="text" name="description" class="form-control form-control-sm" placeholder="e.g. 20% Off on Groceries">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Discount Type</label>
+                        <select name="discount_type" class="form-select form-select-sm">
+                            <option value="PERCENT">Percentage Discount (%)</option>
+                            <option value="FLAT">Flat Amount (₹)</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Discount Value (% or ₹)</label>
+                        <input type="number" step="0.01" name="discount_value" class="form-control form-control-sm" value="10.00" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Min Order Value (₹)</label>
+                        <input type="number" step="0.01" name="min_order_value" class="form-control form-control-sm" value="299.00">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Max Discount Cap (₹)</label>
+                        <input type="number" step="0.01" name="max_discount" class="form-control form-control-sm" placeholder="Optional for %">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Valid Till Date <span class="text-danger">*</span></label>
+                        <input type="date" name="valid_to" class="form-control form-control-sm" required>
+                    </div>
+                    <button type="submit" class="btn btn-warning text-dark w-100 rounded-pill py-2 fw-bold">
+                        Publish Coupon
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right: Coupons Table -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small text-muted text-uppercase">
+                            <tr>
+                                <th>Code &amp; Description</th>
+                                <th>Discount</th>
+                                <th>Min Spend</th>
+                                <th>Usage</th>
+                                <th>Valid Until</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for coupon in coupons %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark font-monospace">{{ coupon.code }}</div>
+                                    <span class="text-muted" style="font-size: 0.72rem;">{{ coupon.description }}</span>
+                                </td>
+                                <td>
+                                    {% if coupon.discount_type == 'PERCENT' %}
+                                        <span class="badge bg-warning text-dark">{{ coupon.discount_value }}% OFF</span>
+                                    {% else %}
+                                        <span class="badge bg-success">₹{{ coupon.discount_value }} FLAT</span>
+                                    {% endif %}
+                                </td>
+                                <td class="small">₹{{ coupon.min_order_value }}</td>
+                                <td class="small text-muted">{{ coupon.used_count }} / {{ coupon.usage_limit }}</td>
+                                <td class="small text-muted">{{ coupon.valid_to|date:"d M Y" }}</td>
+                                <td class="text-center text-nowrap">
+                                    <form action="{% url 'dashboard:coupon_toggle' coupon.id %}" method="POST" class="d-inline">
+                                        {% csrf_token %}
+                                        {% if coupon.is_active %}
+                                        <button type="submit" class="btn btn-sm btn-success rounded-pill px-2" style="font-size: 0.72rem;" title="Click to pause this coupon">
+                                            <i class="bi bi-toggle-on"></i> Active
+                                        </button>
+                                        {% else %}
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill px-2" style="font-size: 0.72rem;" title="Click to activate this coupon">
+                                            <i class="bi bi-toggle-off"></i> Paused
+                                        </button>
+                                        {% endif %}
+                                    </form>
+                                    <form action="{% url 'dashboard:coupon_delete' coupon.id %}" method="POST" class="d-inline" onsubmit="return confirm('Delete coupon {{ coupon.code }}?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">No coupons created yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

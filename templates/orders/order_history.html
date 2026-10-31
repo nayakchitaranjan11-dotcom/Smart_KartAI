@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-bag-check text-success me-2"></i>My Order History</h3>
+            <p class="text-muted small mb-0">Track past purchases, download invoices, and reorder favorites</p>
+        </div>
+        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill fw-semibold">{{ orders.count }} Orders</span>
+    </div>
+
+    {% if orders %}
+    <div class="row g-4">
+        {% for ord in orders %}
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <!-- Header -->
+                <div class="card-header bg-light p-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="fw-bold text-dark">Order #{{ ord.order_number }}</span>
+                        <span class="text-muted small">&bull;</span>
+                        <span class="text-muted small">{{ ord.created_at|date:"d M Y, h:i A" }}</span>
+                    </div>
+                    <div>
+                        {% if ord.status == 'DELIVERED' %}
+                            <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Delivered</span>
+                        {% elif ord.status == 'CANCELLED' %}
+                            <span class="badge bg-danger"><i class="bi bi-x-circle-fill me-1"></i> Cancelled</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark"><i class="bi bi-bicycle me-1"></i> {{ ord.get_status_display }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="card-body p-3 p-md-4">
+                    <div class="row align-items-center g-3">
+                        
+                        <div class="col-md-7">
+                            <div class="d-flex flex-wrap gap-2 mb-2">
+                                {% for item in ord.items.all %}
+                                <span class="badge bg-light text-dark border py-2 px-3 small">
+                                    {{ item.quantity }}x {{ item.product_name }} ({{ item.product_unit }})
+                                </span>
+                                {% endfor %}
+                            </div>
+                            <div class="text-muted small">
+                                Delivering to: <b>{{ ord.shipping_full_name }}</b> &bull; {{ ord.shipping_city }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-5 text-md-end">
+                            <div class="mb-2">
+                                <span class="text-muted small">Total: </span>
+                                <span class="fw-bold fs-5 text-dark">₹{{ ord.grand_total }}</span>
+                                <span class="badge bg-light text-secondary border ms-1 small">{{ ord.get_payment_method_display }}</span>
+                            </div>
+                            <div class="d-flex justify-content-md-end gap-2 flex-wrap">
+                                <a href="{% url 'orders:order_detail' ord.order_number %}" class="btn btn-sm btn-outline-dark rounded-pill px-3">
+                                    Details
+                                </a>
+                                <a href="{% url 'orders:order_tracking' ord.order_number %}" class="btn btn-sm btn-sk-primary rounded-pill px-3">
+                                    Track Live
+                                </a>
+                                <a href="{% url 'orders:download_invoice' ord.order_number %}" class="btn btn-sm btn-light border rounded-pill px-2" title="Download PDF Invoice">
+                                    <i class="bi bi-file-earmark-pdf text-danger"></i>
+                                </a>
+                                <form action="{% url 'orders:reorder' ord.order_number %}" method="POST" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3" title="Add all items of this order to cart again">
+                                        <i class="bi bi-arrow-repeat"></i> Order Again
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5 my-4">
+        <i class="bi bi-bag-x text-muted display-4"></i>
+        <h4 class="fw-bold mt-3 mb-1">No Orders Found</h4>
+        <p class="text-muted small mb-4">You haven't placed any grocery orders yet.</p>
+        <a href="{% url 'catalogue:product_list' %}" class="btn btn-sk-primary rounded-pill px-4">Start Shopping</a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

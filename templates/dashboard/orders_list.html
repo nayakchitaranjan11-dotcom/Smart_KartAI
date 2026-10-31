@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Customer Orders - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-receipt text-success me-2"></i>Order Management &amp; Fulfillment</h3>
+            <p class="text-muted small mb-0">Track order stages, assign dark store delivery riders, and view status history</p>
+        </div>
+        <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            &larr; Admin Dashboard
+        </a>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card shadow-sm border-0 rounded-4 p-3 mb-4">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit();">
+                    <option value="">All Order Statuses</option>
+                    {% for s_val, s_lbl in status_choices %}
+                    <option value="{{ s_val }}" {% if selected_status == s_val %}selected{% endif %}>{{ s_lbl }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-8 text-end">
+                <a href="{% url 'dashboard:orders_list' %}" class="btn btn-sm btn-light border rounded-pill px-3">Clear Filter</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-muted text-uppercase">
+                    <tr>
+                        <th>Order Ref</th>
+                        <th>Date &amp; Time</th>
+                        <th>Customer</th>
+                        <th>Delivery Slot</th>
+                        <th>Status</th>
+                        <th>Total (INR)</th>
+                        <th>Assigned Partner</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ord in page_obj %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'dashboard:order_detail' ord.order_number %}" class="fw-bold text-dark text-decoration-none small">
+                                #{{ ord.order_number }}
+                            </a>
+                        </td>
+                        <td class="small text-muted">{{ ord.created_at|date:"d M Y, h:i A" }}</td>
+                        <td class="small">
+                            <div class="fw-bold text-dark">{{ ord.shipping_full_name }}</div>
+                            <span class="text-muted" style="font-size: 0.72rem;">{{ ord.shipping_city }}</span>
+                        </td>
+                        <td class="small">{{ ord.get_delivery_slot_display }}</td>
+                        <td>
+                            {% if ord.status == 'DELIVERED' %}
+                                <span class="badge bg-success">Delivered</span>
+                            {% elif ord.status == 'CANCELLED' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">{{ ord.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold text-dark small">₹{{ ord.grand_total }}</td>
+                        <td class="small">
+                            {% if ord.delivery_partner %}
+                                <span class="text-primary fw-semibold"><i class="bi bi-bicycle"></i> {{ ord.delivery_partner.username }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border">Unassigned</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'dashboard:order_detail' ord.order_number %}" class="btn btn-sm btn-outline-dark rounded-pill px-3" style="font-size: 0.75rem;">
+                                Manage &rarr;
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">No orders found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

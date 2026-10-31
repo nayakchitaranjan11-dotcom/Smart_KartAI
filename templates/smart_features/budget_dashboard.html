@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block title %}Monthly Budget Smart Cart - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header Banner -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5 mb-4 text-white" style="background: linear-gradient(135deg, #0F5132 0%, #047857 100%);">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold mb-2">
+                    <i class="bi bi-wallet2 me-1"></i> Innovative Feature #2
+                </span>
+                <h2 class="display-6 fw-bold mb-2">Monthly Budget Smart Cart</h2>
+                <p class="text-white-50 lead mb-0" style="font-size: 1.05rem;">
+                    Track household grocery expenses in real-time, project checkout impacts, and receive smart warnings before overspending.
+                </p>
+            </div>
+            <div class="col-lg-4 text-end d-none d-lg-block">
+                <i class="bi bi-pie-chart-fill display-1 text-white opacity-25"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Warnings Banner -->
+    {% if budget_data.is_exceeded %}
+    <div class="alert alert-danger border-danger shadow-sm rounded-4 p-3 mb-4 d-flex align-items-center gap-3">
+        <i class="bi bi-exclamation-octagon-fill fs-2 text-danger"></i>
+        <div>
+            <h6 class="fw-bold mb-1">Monthly Budget Exceeded!</h6>
+            <div class="small">You have spent <b>₹{{ budget_data.spent_this_month }}</b> which exceeds your monthly target limit of ₹{{ budget_data.budget_amount }}. Consider using our Money Saver swaps below.</div>
+        </div>
+    </div>
+    {% elif budget_data.is_approaching %}
+    <div class="alert alert-warning border-warning shadow-sm rounded-4 p-3 mb-4 d-flex align-items-center gap-3">
+        <i class="bi bi-exclamation-triangle-fill fs-2 text-warning"></i>
+        <div>
+            <h6 class="fw-bold mb-1">Approaching Budget Threshold ({{ budget_data.percent_used }}% Used)</h6>
+            <div class="small">You are close to your {{ budget_data.warning_threshold_percent }}% warning threshold. Only <b>₹{{ budget_data.remaining_budget }}</b> remains for this month.</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 1. KPI Cards Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 p-3 h-100 bg-white">
+                <span class="text-muted small fw-semibold">Monthly Budget Limit</span>
+                <div class="display-6 fw-bold text-dark mt-1 fs-3">₹{{ budget_data.budget_amount }}</div>
+                <div class="text-muted small mt-1"><i class="bi bi-calendar-event"></i> {{ budget_data.month_name }}</div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 p-3 h-100 bg-white">
+                <span class="text-muted small fw-semibold">Spent (Delivered/Active)</span>
+                <div class="display-6 fw-bold text-primary mt-1 fs-3">₹{{ budget_data.spent_this_month }}</div>
+                <div class="text-muted small mt-1">Prev Month: ₹{{ budget_data.spent_prev_month }}</div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 p-3 h-100 bg-white">
+                <span class="text-muted small fw-semibold">Current Active Cart</span>
+                <div class="display-6 fw-bold text-warning mt-1 fs-3">₹{{ budget_data.cart_total }}</div>
+                <div class="text-muted small mt-1">Items in Cart: {{ cart.total_items|default:0 }}</div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 p-3 h-100 bg-white">
+                <span class="text-muted small fw-semibold">Remaining Budget</span>
+                <div class="display-6 fw-bold {% if budget_data.remaining_budget > 0 %}text-success{% else %}text-danger{% endif %} mt-1 fs-3">
+                    ₹{{ budget_data.remaining_budget }}
+                </div>
+                <div class="text-muted small mt-1">{{ budget_data.percent_used }}% utilized</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Budget Progress Bar Card -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-bold mb-0">Monthly Spending Progress</h6>
+            <span class="fw-bold {% if budget_data.percent_used >= 100 %}text-danger{% elif budget_data.percent_used >= budget_data.warning_threshold_percent %}text-warning{% else %}text-success{% endif %}">
+                {{ budget_data.percent_used }}% of ₹{{ budget_data.budget_amount }}
+            </span>
+        </div>
+        <div class="progress sk-budget-bar mb-2" style="height: 16px;">
+            <div class="progress-bar {% if budget_data.percent_used >= 100 %}bg-danger{% elif budget_data.percent_used >= budget_data.warning_threshold_percent %}bg-warning text-dark{% else %}bg-success{% endif %}" 
+                 role="progressbar" 
+                 style="width: {{ budget_data.percent_used }}%;">
+                {{ budget_data.percent_used }}%
+            </div>
+        </div>
+        <div class="d-flex justify-content-between text-muted small">
+            <span>₹0</span>
+            <span>Warning Alert: ₹{{ budget_data.budget.warning_threshold_amount }} ({{ budget_data.warning_threshold_percent }}%)</span>
+            <span>Cap: ₹{{ budget_data.budget_amount }}</span>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        
+        <!-- 3. Category Spending Chart -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
+                <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart text-success me-2"></i>Spending by Category</h5>
+                {% if budget_data.category_labels %}
+                <div style="height: 260px; position: relative;">
+                    <canvas id="categorySpendingChart"></canvas>
+                </div>
+                {% if budget_data.top_category %}
+                <div class="p-3 bg-light rounded-3 mt-3 small text-center">
+                    Highest Spending Category: <b class="text-success">{{ budget_data.top_category.0 }}</b> (₹{{ budget_data.top_category.1 }})
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-5 text-muted small">
+                    <i class="bi bi-bar-chart display-4 d-block mb-2"></i>
+                    No order data recorded for this month yet. Place your first order to see category analytics!
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 4. Budget Settings Form -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
+                <h5 class="fw-bold mb-3"><i class="bi bi-sliders text-primary me-2"></i>Update Monthly Limits</h5>
+                <p class="text-muted small mb-4">Adjust your target grocery spending allowance and alert thresholds:</p>
+
+                <form method="POST" action="{% url 'smart_features:update_budget' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Monthly Grocery Budget (₹)</label>
+                        <input type="number" name="budget_amount" class="form-control" value="{{ budget_data.budget_amount }}" step="100" min="100" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-semibold">Warning Alert Threshold (%)</label>
+                        <input type="number" name="warning_threshold_percent" class="form-control" value="{{ budget_data.warning_threshold_percent }}" min="50" max="100" required>
+                        <div class="form-text small">Receive warnings when spending exceeds this percentage.</div>
+                    </div>
+                    <button type="submit" class="btn btn-sk-primary w-100 rounded-pill py-2 fw-bold">
+                        Save Budget Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 5. "Save Money" Smart Recommendations for Current Cart -->
+    {% if budget_data.money_saver_suggestions %}
+    <div class="card shadow-sm border-0 rounded-4 p-4 mb-4 border-start border-4 border-warning">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <span class="badge bg-warning text-dark px-2 py-1">Money Saver Engine</span>
+                <h5 class="fw-bold mb-0 mt-1">Smart Cart Swaps to Save Money</h5>
+                <p class="text-muted small mb-0">Our AI detected cheaper, in-stock alternatives for items currently in your cart:</p>
+            </div>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+            {% for swap in budget_data.money_saver_suggestions %}
+            <div class="col">
+                <div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-muted small text-decoration-line-through">{{ swap.original_product.name }} (₹{{ swap.original_product.selling_price }})</div>
+                        <div class="fw-bold text-dark">{{ swap.cheaper_product.name }} (₹{{ swap.cheaper_product.selling_price }})</div>
+                        <span class="badge bg-success small">Save ₹{{ swap.total_savings }} total</span>
+                        <span class="text-muted small ms-1">{{ swap.pack_info }}</span>
+                    </div>
+                    <form action="{% url 'smart_features:swap_cheaper_item' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="cart_item_id" value="{{ swap.cart_item.id }}">
+                        <input type="hidden" name="cheaper_prod_id" value="{{ swap.cheaper_product.id }}">
+                        <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold">
+                            Swap &amp; Save
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
+{# extra_js must live OUTSIDE the content block, otherwise Django renders it twice (charts were created twice) #}
+{% block extra_js %}
+{% if budget_data.category_labels %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('categorySpendingChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ budget_data.category_labels|safe }},
+                datasets: [{
+                    data: {{ budget_data.category_values|safe }},
+                    backgroundColor: ['#0F5132', '#10B981', '#F59E0B', '#3B82F6', '#EC4899', '#8B5CF6', '#64748B'],
+                    borderWidth: 2,
+                    borderColor: '#FFFFFF'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

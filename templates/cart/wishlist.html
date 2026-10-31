@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block title %}My Wishlist - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-heart-fill text-danger me-2"></i>My Wishlist</h3>
+            <p class="text-muted small mb-0">Saved grocery items ready for future orders</p>
+        </div>
+        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill fw-semibold">{{ items.count }} Items</span>
+    </div>
+
+    {% if items %}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mb-5">
+        {% for entry in items %}
+        <div class="col">
+            <div class="sk-product-card">
+                <div class="sk-product-image-box">
+                    {% if entry.product.discount_percent > 0 %}
+                    <span class="sk-discount-badge">{{ entry.product.discount_percent }}% OFF</span>
+                    {% endif %}
+
+                    <form action="{% url 'cart:toggle_wishlist' %}" method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="product_id" value="{{ entry.product.id }}">
+                        <button type="submit" class="sk-wishlist-btn text-danger active" title="Remove from Wishlist">
+                            <i class="bi bi-heart-fill"></i>
+                        </button>
+                    </form>
+
+                    <a href="{% url 'catalogue:product_detail' entry.product.slug %}">
+                        {% if entry.product.image %}
+                            <img src="{{ entry.product.image.url }}" alt="{{ entry.product.name }}" class="sk-product-img">
+                        {% else %}
+                            <span class="sk-emoji sk-emoji-lg" style="--sk-tile: {{ entry.product|product_tile_color }};" aria-hidden="true">{{ entry.product|product_emoji }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+
+                <div class="sk-product-body">
+                    <div class="sk-product-unit">{{ entry.product.category.name }} &bull; {{ entry.product.unit }}</div>
+                    <a href="{% url 'catalogue:product_detail' entry.product.slug %}" class="sk-product-title text-decoration-none">
+                        {{ entry.product.name }}
+                    </a>
+
+                    <div class="sk-product-footer">
+                        <div>
+                            <span class="sk-price-now">₹{{ entry.product.selling_price }}</span>
+                            {% if entry.product.original_price > entry.product.selling_price %}
+                            <span class="sk-price-was">₹{{ entry.product.original_price }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% if entry.product.is_in_stock %}
+                        <form action="{% url 'cart:add_to_cart' %}" method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="product_id" value="{{ entry.product.id }}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn btn-sk-add">
+                                <i class="bi bi-plus"></i> ADD
+                            </button>
+                        </form>
+                        {% else %}
+                        <a href="{% url 'smart_features:substitution_detail' entry.product.id %}" class="btn btn-sm btn-outline-secondary rounded-pill" style="font-size: 0.75rem;">
+                            Substitute
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5 my-4">
+        <i class="bi bi-heart text-muted display-4"></i>
+        <h4 class="fw-bold mt-3 mb-1">Your Wishlist is Empty</h4>
+        <p class="text-muted small mb-4">Save products you love so you can quickly add them to your cart next time.</p>
+        <a href="{% url 'catalogue:product_list' %}" class="btn btn-sk-primary rounded-pill px-4">Explore Products</a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-shield-check text-success me-2"></i>Checkout &amp; Delivery</h3>
+            <p class="text-muted small mb-0">Select delivery address, choose time slot &amp; payment method</p>
+        </div>
+        <div class="sk-simulation-badge">
+            <i class="bi bi-info-circle-fill"></i> Academic Simulation
+        </div>
+    </div>
+
+    <form method="POST" action="{% url 'orders:checkout' %}">
+        {% csrf_token %}
+
+        <div class="row g-4">
+            
+            <!-- Left: Address, Slot, Payment -->
+            <div class="col-lg-8">
+                
+                <!-- 1. Address Selection -->
+                <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">1. Delivery Address</h5>
+                        <a href="{% url 'accounts:address_add' %}?next={% url 'orders:checkout' %}" class="btn btn-sm btn-outline-success rounded-pill">
+                            <i class="bi bi-plus-lg me-1"></i> Add New Address
+                        </a>
+                    </div>
+
+                    {% if addresses %}
+                    <div class="row g-3">
+                        {% for addr in addresses %}
+                        <div class="col-md-6">
+                            <label class="card h-100 p-3 rounded-3 border cursor-pointer {% if addr.is_default %}border-success bg-light{% endif %}" style="cursor: pointer;">
+                                <div class="d-flex align-items-start gap-2">
+                                    <input type="radio" name="address_id" value="{{ addr.id }}" class="form-check-input mt-1" {% if addr.id == default_address.id %}checked{% endif %} required>
+                                    <div class="small lh-sm flex-grow-1">
+                                        <div class="fw-bold text-dark d-flex justify-content-between align-items-center mb-1">
+                                            <span>{{ addr.full_name }}</span>
+                                            <span class="badge bg-light text-dark border">{{ addr.get_address_type_display }}</span>
+                                        </div>
+                                        <div class="text-secondary mb-1">{{ addr.street_address }}</div>
+                                        {% if addr.landmark %}<div class="text-muted mb-1">Landmark: {{ addr.landmark }}</div>{% endif %}
+                                        <div class="text-dark">{{ addr.city }}, {{ addr.state }} - <b>{{ addr.postal_code }}</b></div>
+                                        <div class="text-muted mt-1"><i class="bi bi-telephone me-1"></i>{{ addr.phone_number }}</div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning p-3 rounded-3 mb-0">
+                        <i class="bi bi-geo-alt-fill me-1"></i> You don't have any saved delivery addresses yet.
+                        <a href="{% url 'accounts:address_add' %}?next={% url 'orders:checkout' %}" class="fw-bold text-dark text-decoration-underline ms-2">Add Delivery Address &rarr;</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- 2. Delivery Slot Picker -->
+                <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                    <h5 class="fw-bold mb-3">2. Delivery Time Slot</h5>
+                    <div class="row g-3">
+                        {% for slot_val, slot_label in delivery_slots %}
+                        <div class="col-md-6">
+                            <label class="card p-3 rounded-3 border cursor-pointer" style="cursor: pointer;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="radio" name="delivery_slot" value="{{ slot_val }}" class="form-check-input" {% if forloop.first %}checked{% endif %}>
+                                    <div class="small">
+                                        <div class="fw-bold text-dark">{{ slot_label }}</div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">Hyperlocal fulfillment hub</div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- 3. Payment Method Selection (Simulated) -->
+                <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">3. Payment Method (Simulated)</h5>
+                        <span class="badge bg-warning text-dark">No Real Money Deducted</span>
+                    </div>
+
+                    <div class="row g-3">
+                        {% for pay_val, pay_label in payment_methods %}
+                        <div class="col-12">
+                            <label class="card p-3 rounded-3 border cursor-pointer" style="cursor: pointer;">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <input type="radio" name="payment_method" value="{{ pay_val }}" class="form-check-input" {% if forloop.first %}checked{% endif %}>
+                                        <div>
+                                            <div class="fw-bold text-dark">
+                                                {% if pay_val == 'COD' %}
+                                                    <i class="bi bi-cash-stack text-success me-1"></i>
+                                                {% elif pay_val == 'UPI' %}
+                                                    <i class="bi bi-qr-code text-primary me-1"></i>
+                                                {% else %}
+                                                    <i class="bi bi-credit-card-2-front text-info me-1"></i>
+                                                {% endif %}
+                                                {{ pay_label }}
+                                            </div>
+                                            <div class="text-muted small">Academic simulation test mode</div>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-light text-secondary border">Simulated</span>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- 4. Delivery Instructions / Notes -->
+                <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                    <h5 class="fw-bold mb-2">4. Delivery Instructions <small class="text-muted fs-6">(Optional)</small></h5>
+                    <textarea name="order_notes" class="form-control" rows="2" placeholder="e.g. Please leave at the doorstep / Ring bell twice / Call upon arrival"></textarea>
+                </div>
+
+            </div>
+
+            <!-- Right: Order Review & Confirmation -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 rounded-4 p-4 mb-4 sticky-top" style="top: 85px;">
+                    <h5 class="fw-bold mb-3">Order Summary</h5>
+
+                    <!-- Items Quick List -->
+                    <div class="list-group list-group-flush mb-3 small" style="max-height: 220px; overflow-y: auto;">
+                        {% for item in cart.items.all %}
+                        <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-semibold text-dark">{{ item.quantity }}x {{ item.product.name }}</span>
+                                <div class="text-muted" style="font-size: 0.75rem;">{{ item.product.unit }}</div>
+                            </div>
+                            <span class="fw-bold text-dark">₹{{ item.total_price }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <hr class="my-2">
+
+                    <!-- Breakdown -->
+                    <div class="d-flex justify-content-between text-secondary mb-2 small">
+                        <span>Items Subtotal</span>
+                        <span>₹{{ cart.subtotal }}</span>
+                    </div>
+
+                    {% if cart.coupon_discount > 0 %}
+                    <div class="d-flex justify-content-between text-success mb-2 small">
+                        <span>Coupon Savings</span>
+                        <span>- ₹{{ cart.coupon_discount }}</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between text-secondary mb-3 small">
+                        <span>Delivery Fee</span>
+                        <span>{% if cart.delivery_fee == 0 %}<span class="text-success fw-bold">FREE</span>{% else %}₹{{ cart.delivery_fee }}{% endif %}</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold fs-5 text-dark">Payable Amount</span>
+                        <span class="display-6 fw-bold text-success fs-4">₹{{ cart.grand_total }}</span>
+                    </div>
+
+                    <button type="submit" class="btn btn-sk-primary w-100 py-3 rounded-pill fw-bold fs-6 shadow">
+                        <i class="bi bi-bag-check-fill me-1"></i> Place Order Now
+                    </button>
+
+                    <div class="text-center text-muted mt-3" style="font-size: 0.75rem;">
+                        <i class="bi bi-shield-lock-fill text-success"></i> 100% Secure Simulated Checkout
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+
+</div>
+{% endblock %}

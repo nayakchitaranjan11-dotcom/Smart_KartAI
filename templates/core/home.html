@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+{% load static core_tags %}
+
+{% block title %}SmartKart AI - Intelligent Grocery Delivery & Shopping Management System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- 1. Hero Promotional Section -->
+    <div class="sk-hero">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3">
+                    <i class="bi bi-lightning-charge-fill"></i> 15-30 Minute Express Delivery
+                </span>
+                <h1 class="display-5 fw-extrabold text-white mb-3" style="font-weight: 800; letter-spacing: -1px;">
+                    Smart Groceries.<br>Powered by AI Intelligence.
+                </h1>
+                <p class="lead text-white-50 mb-4" style="font-size: 1.1rem;">
+                    Upload your handwritten shopping list, control monthly budget limits, cook with Recipe-to-Cart, and rescue near-expiry deals at up to 70% off.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{% url 'smart_features:scanner' %}" class="btn btn-warning text-dark fw-bold px-4 py-2 rounded-pill shadow">
+                        <i class="bi bi-camera-fill me-1"></i> Scan Grocery List
+                    </a>
+                    <a href="{% url 'catalogue:product_list' %}" class="btn btn-outline-light fw-bold px-4 py-2 rounded-pill">
+                        <i class="bi bi-shop me-1"></i> Explore 40+ Items
+                    </a>
+                    <a href="{% url 'smart_features:expiry_deals' %}" class="btn btn-danger fw-bold px-3 py-2 rounded-pill">
+                        <i class="bi bi-fire me-1"></i> Rescue Deals
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block text-center">
+                <div class="p-4 bg-white bg-opacity-10 rounded-4 border border-white border-opacity-25 shadow-lg backdrop-blur">
+                    <div class="row g-2 text-start">
+                        <div class="col-6">
+                            <div class="p-3 bg-white rounded-3 shadow-sm text-dark">
+                                <i class="bi bi-magic text-success fs-3"></i>
+                                <div class="fw-bold mt-2">AI List OCR</div>
+                                <div class="text-muted small">Image to Cart</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-white rounded-3 shadow-sm text-dark">
+                                <i class="bi bi-wallet2 text-primary fs-3"></i>
+                                <div class="fw-bold mt-2">Monthly Budget</div>
+                                <div class="text-muted small">Cart Impact Alert</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-white rounded-3 shadow-sm text-dark">
+                                <i class="bi bi-egg-fried text-warning fs-3"></i>
+                                <div class="fw-bold mt-2">Recipe-to-Cart</div>
+                                <div class="text-muted small">Dynamic Servings</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-white rounded-3 shadow-sm text-dark">
+                                <i class="bi bi-percent text-danger fs-3"></i>
+                                <div class="fw-bold mt-2">Expiry Rescue</div>
+                                <div class="text-muted small">Zero Waste Savings</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Five Innovation Highlights -->
+    <div class="row g-3 mb-5">
+        <div class="col-md-4 col-lg">
+            <a href="{% url 'smart_features:scanner' %}" class="sk-feature-box text-decoration-none d-block">
+                <div class="sk-feature-icon-wrapper bg-success bg-opacity-10 text-success">
+                    <i class="bi bi-camera"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">AI List Scanner</h6>
+                <p class="text-muted small mb-0">Snap paper lists to automatically add matching products.</p>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg">
+            <a href="{% url 'smart_features:budget_dashboard' %}" class="sk-feature-box text-decoration-none d-block">
+                <div class="sk-feature-icon-wrapper bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-pie-chart"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">Smart Budget</h6>
+                <p class="text-muted small mb-0">Set monthly limits, get 80% alerts, and cheaper swaps.</p>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg">
+            <a href="{% url 'smart_features:recipe_list' %}" class="sk-feature-box text-decoration-none d-block">
+                <div class="sk-feature-icon-wrapper bg-warning bg-opacity-10 text-warning">
+                    <i class="bi bi-egg-fried"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">Recipe-to-Cart</h6>
+                <p class="text-muted small mb-0">Select recipes, scale portions, and 1-click cart push.</p>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg">
+            <a href="{% url 'smart_features:expiry_deals' %}" class="sk-feature-box text-decoration-none d-block border-danger border-opacity-25 bg-danger bg-opacity-10">
+                <div class="sk-feature-icon-wrapper bg-danger text-white">
+                    <i class="bi bi-hourglass-bottom"></i>
+                </div>
+                <h6 class="fw-bold text-danger mb-1">Expiry Rescue</h6>
+                <p class="text-dark small mb-0">Up to 70% off near-expiry fresh groceries before waste.</p>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg">
+            <a href="{% url 'catalogue:product_list' %}" class="sk-feature-box text-decoration-none d-block">
+                <div class="sk-feature-icon-wrapper bg-info bg-opacity-10 text-info">
+                    <i class="bi bi-arrow-repeat"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-1">Smart Substitution</h6>
+                <p class="text-muted small mb-0">Multi-factor scoring for out-of-stock alternatives.</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- 3. Shop By Category -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold mb-0"><i class="bi bi-grid-fill text-success me-2"></i>Shop by Category</h3>
+        <a href="{% url 'catalogue:product_list' %}" class="fw-semibold text-success small">View All <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-8 g-3 mb-5">
+        {% for cat in categories %}
+        <div class="col">
+            <a href="{% url 'catalogue:category_products' cat.slug %}" class="sk-category-card text-decoration-none">
+                <div class="sk-category-icon">
+                    <i class="bi {{ cat.icon_class|default:'bi-basket' }}"></i>
+                </div>
+                <h6 class="sk-category-name text-truncate">{{ cat.name }}</h6>
+                <span class="text-muted" style="font-size: 0.72rem;">{{ cat.active_products_count }} items</span>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- 4. Expiry Rescue Deals Banner / Cards -->
+    {% if rescue_deals %}
+    <div class="p-4 rounded-4 mb-5 border border-danger border-opacity-25" style="background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div>
+                <span class="badge bg-danger px-3 py-1 text-uppercase fw-bold"><i class="bi bi-fire me-1"></i> Food Rescue Initiative</span>
+                <h3 class="fw-bold text-danger mb-0 mt-1">Expiry Rescue Deals</h3>
+                <p class="text-muted small mb-0">Save big on quality groceries expiring soon &amp; help fight food waste!</p>
+            </div>
+            <a href="{% url 'smart_features:expiry_deals' %}" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-3">
+                View All Deals <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+            {% for deal in rescue_deals %}
+            <div class="col">
+                <div class="sk-product-card shadow-sm border-danger border-opacity-25">
+                    <div class="sk-product-image-box">
+                        <span class="sk-rescue-badge">
+                            <i class="bi bi-hourglass-split"></i> {{ deal.rescue_discount_percent }}% OFF
+                        </span>
+                        {% if deal.product.image %}
+                            <img src="{{ deal.product.image.url }}" alt="{{ deal.product.name }}" class="sk-product-img">
+                        {% else %}
+                            <span class="sk-emoji sk-emoji-lg" style="--sk-tile: {{ deal.product|product_tile_color }};" aria-hidden="true">{{ deal.product|product_emoji }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="sk-product-body">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="sk-product-unit">{{ deal.product.unit }}</span>
+                            <span class="badge bg-{{ deal.urgency_level }} text-white" style="font-size: 0.68rem;">
+                                Exp: {{ deal.days_remaining }} days left
+                            </span>
+                        </div>
+                        <a href="{% url 'catalogue:product_detail' deal.product.slug %}" class="sk-product-title text-decoration-none">
+                            {{ deal.product.name }}
+                        </a>
+                        <div class="sk-product-footer">
+                            <div>
+                                <span class="sk-price-now text-danger">₹{{ deal.rescue_price }}</span>
+                                <span class="sk-price-was">₹{{ deal.product.original_price }}</span>
+                            </div>
+                            <form action="{% url 'smart_features:expiry_add_to_cart' deal.id %}" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold">
+                                    Rescue
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 4b. Buy Again (added: Blinkit-style quick reorder for returning customers) -->
+    {% if buy_again_products %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0"><i class="bi bi-arrow-repeat text-success me-2"></i>Buy Again</h3>
+            <p class="text-muted small mb-0">Your regulars, one tap away</p>
+        </div>
+        <a href="{% url 'orders:order_history' %}" class="fw-semibold text-success small">Past Orders <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="d-flex gap-3 overflow-auto pb-2 mb-5">
+        {% for product in buy_again_products %}
+        <div class="sk-again-card d-flex align-items-center gap-3">
+            <a href="{% url 'catalogue:product_detail' product.slug %}">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 56px; height: 56px; object-fit: contain;">
+                {% else %}
+                    <span class="sk-emoji sk-emoji-sm" style="--sk-tile: {{ product|product_tile_color }};">{{ product|product_emoji }}</span>
+                {% endif %}
+            </a>
+            <div class="flex-grow-1" style="min-width: 0;">
+                <a href="{% url 'catalogue:product_detail' product.slug %}" class="d-block small fw-bold text-dark text-truncate" style="max-width: 150px;">{{ product.name }}</a>
+                <div class="text-muted" style="font-size: 0.72rem;">{{ product.unit }} &bull; bought {{ product.times_bought }}&times;</div>
+                <div class="d-flex align-items-center justify-content-between gap-2 mt-1">
+                    <b class="small">₹{{ product.selling_price }}</b>
+                    {% if product.is_in_stock %}
+                    <form action="{% url 'cart:add_to_cart' %}" method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn btn-sk-add py-0 px-2"><i class="bi bi-plus"></i> ADD</button>
+                    </form>
+                    {% else %}
+                    <a href="{% url 'smart_features:substitution_detail' product.id %}" class="badge bg-light text-muted border">Swap</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- 5. Popular & Featured Products -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold mb-0"><i class="bi bi-star-fill text-warning me-2"></i>Popular Products</h3>
+            <p class="text-muted small mb-0">Customer favorites in your local neighborhood hub</p>
+        </div>
+        <a href="{% url 'catalogue:product_list' %}" class="fw-semibold text-success small">See All <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 mb-5">
+        {% for product in popular_products %}
+        <div class="col">
+            <div class="sk-product-card">
+                <div class="sk-product-image-box">
+                    {% if product.discount_percent > 0 %}
+                    <span class="sk-discount-badge">{{ product.discount_percent }}% OFF</span>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                    <button class="sk-wishlist-btn sk-wishlist-ajax" data-product-id="{{ product.id }}" title="Add to Wishlist">
+                        <i class="bi bi-heart"></i>
+                    </button>
+                    {% endif %}
+
+                    <a href="{% url 'catalogue:product_detail' product.slug %}">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="sk-product-img">
+                        {% else %}
+                            <span class="sk-emoji sk-emoji-lg" style="--sk-tile: {{ product|product_tile_color }};" aria-hidden="true">{{ product|product_emoji }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+                <div class="sk-product-body">
+                    <div class="sk-product-unit">{{ product.category.name }} &bull; {{ product.unit }}</div>
+                    <a href="{% url 'catalogue:product_detail' product.slug %}" class="sk-product-title text-decoration-none">
+                        {{ product.name }}
+                    </a>
+                    
+                    <div class="d-flex align-items-center gap-1 mb-2" style="font-size: 0.78rem;">
+                        <span class="badge bg-success bg-opacity-10 text-success fw-bold">
+                            <i class="bi bi-star-fill text-warning"></i> {{ product.average_rating }}
+                        </span>
+                        <span class="text-muted">({{ product.total_reviews }} reviews)</span>
+                    </div>
+
+                    <div class="sk-product-footer">
+                        <div>
+                            <span class="sk-price-now">₹{{ product.selling_price }}</span>
+                            {% if product.original_price > product.selling_price %}
+                            <span class="sk-price-was">₹{{ product.original_price }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% if product.is_in_stock %}
+                        <form action="{% url 'cart:add_to_cart' %}" method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn btn-sk-add">
+                                <i class="bi bi-plus"></i> ADD
+                            </button>
+                        </form>
+                        {% else %}
+                        <a href="{% url 'smart_features:substitution_detail' product.id %}" class="btn btn-sm btn-outline-secondary rounded-pill" style="font-size: 0.75rem;">
+                            Substitute
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- 6. Recipe-to-Cart Showcase -->
+    <div class="bg-white p-4 rounded-4 border shadow-sm mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <span class="badge bg-warning text-dark px-3 py-1 fw-bold"><i class="bi bi-egg-fried me-1"></i> Cook Something Delicious</span>
+                <h3 class="fw-bold mb-0 mt-1">Recipe-to-Cart</h3>
+                <p class="text-muted small mb-0">Select recipes, scale servings, and add all required ingredients in 1 click!</p>
+            </div>
+            <a href="{% url 'smart_features:recipe_list' %}" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold">
+                Browse All Recipes <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+            {% for recipe in featured_recipes %}
+            <div class="col">
+                <div class="card h-100 border rounded-3 overflow-hidden shadow-sm">
+                    <div class="bg-light d-flex align-items-center justify-content-center p-3" style="height: 140px;">
+                        {% if recipe.image %}
+                            <img src="{{ recipe.image.url }}" alt="{{ recipe.name }}" style="max-height: 120px; object-fit: cover; border-radius: 8px;">
+                        {% else %}
+                            <span class="sk-emoji sk-emoji-lg" aria-hidden="true">{{ recipe|recipe_emoji }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body d-flex flex-direction-column flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge bg-light text-dark border small">{{ recipe.cuisine }}</span>
+                            <span class="text-muted small"><i class="bi bi-clock"></i> {{ recipe.total_time_minutes }}m</span>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1">{{ recipe.name }}</h6>
+                        <p class="text-muted small mb-3" style="font-size: 0.8rem; line-height: 1.3;">
+                            {{ recipe.description|truncatewords:10 }}
+                        </p>
+                        <div class="mt-auto">
+                            <a href="{% url 'smart_features:recipe_detail' recipe.slug %}" class="btn btn-sk-primary btn-sm w-100 rounded-pill">
+                                View Ingredients &rarr;
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 7. Value Proposition & Assurance Badges -->
+    <div class="row g-3 text-center mb-4">
+        <div class="col-md-3">
+            <div class="p-3 bg-white rounded-3 border shadow-sm">
+                <i class="bi bi-truck text-success fs-1 mb-2"></i>
+                <h6 class="fw-bold mb-1">15-30 Min Delivery</h6>
+                <p class="text-muted small mb-0">Hyperlocal fulfillment directly from dark stores.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-white rounded-3 border shadow-sm">
+                <i class="bi bi-shield-check text-primary fs-1 mb-2"></i>
+                <h6 class="fw-bold mb-1">Freshness Guaranteed</h6>
+                <p class="text-muted small mb-0">Strict quality audits and certified farm staples.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-white rounded-3 border shadow-sm">
+                <i class="bi bi-tags text-warning fs-1 mb-2"></i>
+                <h6 class="fw-bold mb-1">Budget Optimization</h6>
+                <p class="text-muted small mb-0">Monthly budget alerts and cheaper alternatives.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-white rounded-3 border shadow-sm">
+                <i class="bi bi-recycle text-danger fs-1 mb-2"></i>
+                <h6 class="fw-bold mb-1">Zero Food Waste</h6>
+                <p class="text-muted small mb-0">Expiry rescue deals to prevent grocery waste.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

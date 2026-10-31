@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block title %}Smart Product Substitution - {{ product.name }} - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header Banner -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5 mb-4 text-white" style="background: linear-gradient(135deg, #0284C7 0%, #0369A1 50%, #075985 100%);">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold mb-2">
+                    <i class="bi bi-arrow-repeat me-1"></i> Innovative Feature #5
+                </span>
+                <h2 class="display-6 fw-bold mb-2">Smart Product Substitution</h2>
+                <p class="text-white-50 lead mb-0" style="font-size: 1.05rem;">
+                    Explainable multi-factor scoring algorithm that ensures you never leave empty-handed when grocery items run out of stock.
+                </p>
+            </div>
+            <div class="col-lg-4 text-end d-none d-lg-block">
+                <i class="bi bi-diagram-3-fill display-1 text-white opacity-25"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Target Unavailable Product Header Card -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 mb-4 border-start border-4 border-danger">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="p-2 bg-light rounded-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" style="max-height: 55px; max-width: 55px; object-fit: contain;">
+                    {% else %}
+                        <span class="sk-emoji sk-emoji-md" style="--sk-tile: {{ product|product_tile_color }};" aria-hidden="true">{{ product|product_emoji }}</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <span class="badge bg-danger mb-1"><i class="bi bi-x-circle-fill me-1"></i> Currently Out of Stock</span>
+                    <h4 class="fw-bold text-dark mb-0">{{ product.name }}</h4>
+                    <span class="text-muted small">{{ product.category.name }} &bull; {{ product.unit }} &bull; ₹{{ product.selling_price }}</span>
+                </div>
+            </div>
+            <a href="{% url 'catalogue:product_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                Back to Catalogue
+            </a>
+        </div>
+    </div>
+
+    <!-- Explainable Algorithm Breakdown Box -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 mb-4 bg-light">
+        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-cpu text-info me-2"></i>Multi-Factor Recommendation Scoring Criteria:</h6>
+        <div class="row g-2 text-secondary small text-center">
+            <div class="col-4 col-md-2">
+                <div class="p-2 bg-white rounded-3 border">
+                    <b class="text-primary d-block">35%</b>
+                    <span>Category</span>
+                </div>
+            </div>
+            <div class="col-4 col-md-2">
+                <div class="p-2 bg-white rounded-3 border">
+                    <b class="text-success d-block">20%</b>
+                    <span>Tags &amp; Diet</span>
+                </div>
+            </div>
+            <div class="col-4 col-md-2">
+                <div class="p-2 bg-white rounded-3 border">
+                    <b class="text-warning d-block">15%</b>
+                    <span>Pack/Weight</span>
+                </div>
+            </div>
+            <div class="col-4 col-md-2">
+                <div class="p-2 bg-white rounded-3 border">
+                    <b class="text-danger d-block">10%</b>
+                    <span>Brand Match</span>
+                </div>
+            </div>
+            <div class="col-4 col-md-2">
+                <div class="p-2 bg-white rounded-3 border">
+                    <b class="text-info d-block">10%</b>
+                    <span>Price Proximity</span>
+                </div>
+            </div>
+            <div class="col-4 col-md-2">
+                <div class="p-2 bg-white rounded-3 border">
+                    <b class="text-dark d-block">10%</b>
+                    <span>User Rating</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ranked Substitutes List -->
+    <h4 class="fw-bold mb-3"><i class="bi bi-stars text-warning me-2"></i>Ranked In-Stock Substitutes</h4>
+    
+    <div class="row g-4 mb-5">
+        {% for sub in substitutes %}
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-4 p-4 h-100 position-relative">
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-2 bg-light rounded-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                            {% if sub.product.image %}
+                                <img src="{{ sub.product.image.url }}" alt="{{ sub.product.name }}" style="max-height: 55px; max-width: 55px; object-fit: contain;">
+                            {% else %}
+                                <span class="sk-emoji sk-emoji-md" style="--sk-tile: {{ sub.product|product_tile_color }};" aria-hidden="true">{{ sub.product|product_emoji }}</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <span class="badge bg-success small mb-1"><i class="bi bi-check-circle-fill"></i> In Stock ({{ sub.product.stock_quantity }} units)</span>
+                            <h5 class="fw-bold text-dark mb-0">
+                                <a href="{% url 'catalogue:product_detail' sub.product.slug %}" class="text-dark text-decoration-none">
+                                    {{ sub.product.name }}
+                                </a>
+                            </h5>
+                            <span class="text-muted small">{{ sub.product.category.name }} &bull; {{ sub.product.unit }}</span>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-primary fs-6 px-3 py-1 rounded-pill">{{ sub.score }}% Match</span>
+                    </div>
+                </div>
+
+                <!-- Explanation Reasons Badges -->
+                <div class="mb-3">
+                    <div class="small fw-semibold text-muted mb-1">Why this is recommended:</div>
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for reason in sub.all_reasons %}
+                        <span class="badge bg-light text-dark border small"><i class="bi bi-check text-success"></i> {{ reason }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Price Difference & Action -->
+                <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-auto">
+                    <div>
+                        <span class="fw-bold fs-5 text-dark">₹{{ sub.product.selling_price }}</span>
+                        {% if sub.is_cheaper %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle ms-1">Saves ₹{{ sub.price_diff_abs }}</span>
+                        {% else %}
+                            <span class="text-muted small ms-1">(+₹{{ sub.price_diff_abs }})</span>
+                        {% endif %}
+                    </div>
+
+                    <form action="{% url 'cart:add_to_cart' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="product_id" value="{{ sub.product.id }}">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn btn-sk-primary rounded-pill px-4 fw-bold">
+                            <i class="bi bi-cart-plus me-1"></i> Add Substitute
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-emoji-neutral text-muted display-4"></i>
+            <h5 class="fw-bold mt-3">No Direct In-Stock Substitute Found</h5>
+            <p class="text-muted small">We couldn't find matching active inventory in this category.</p>
+            <a href="{% url 'catalogue:product_list' %}" class="btn btn-sk-primary rounded-pill px-4">Browse Catalogue</a>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Customer Support &amp; Contact - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="bg-success text-white p-4 p-md-5 text-center" style="background-color: var(--sk-primary) !important;">
+                    <i class="bi bi-headset fs-1 mb-2"></i>
+                    <h2 class="fw-bold mb-1">We're Here to Help</h2>
+                    <p class="text-white-50 mb-0">Have questions about your order, delivery, or SmartKart AI features? Send us a message.</p>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST" action="{% url 'core:contact' %}">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Your Full Name <span class="text-danger">*</span></label>
+                                <input type="text" name="name" class="form-control" placeholder="John Doe" required value="{{ user.get_full_name|default:user.username }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" name="email" class="form-control" placeholder="you@example.com" required value="{{ user.email }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Phone Number</label>
+                                <input type="tel" name="phone" class="form-control" placeholder="10-digit Mobile Number">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Subject <span class="text-danger">*</span></label>
+                                <select name="subject" class="form-select" required>
+                                    <option value="Order Status Inquiry">Order Status Inquiry</option>
+                                    <option value="AI Scanner Feedback">AI List Scanner Feedback</option>
+                                    <option value="Budget Feature Suggestion">Budget Feature Suggestion</option>
+                                    <option value="Recipe Request">Recipe Request</option>
+                                    <option value="Expiry Deal Inquiry">Expiry Deal Inquiry</option>
+                                    <option value="General Support">General Support</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Message / Issue Details <span class="text-danger">*</span></label>
+                                <textarea name="message" class="form-control" rows="4" placeholder="How can our support team assist you today?" required></textarea>
+                            </div>
+                            <div class="col-12 text-end mt-4">
+                                <button type="submit" class="btn btn-sk-primary px-4 py-2 rounded-pill fw-bold">
+                                    <i class="bi bi-send me-1"></i> Send Support Message
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

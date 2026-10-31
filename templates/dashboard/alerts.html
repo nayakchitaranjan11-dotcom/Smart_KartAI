@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Low Stock &amp; Near-Expiry Alerts - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-bell-fill text-danger me-2"></i>Operational Alerts &amp; Critical Inventory</h3>
+            <p class="text-muted small mb-0">Automated inventory warnings for low stock levels and near-expiry goods</p>
+        </div>
+        <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            &larr; Admin Dashboard
+        </a>
+    </div>
+
+    <!-- 1. Low Stock Alerts -->
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-5">
+        <div class="card-header bg-warning bg-opacity-10 p-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Low Stock Inventory (<= 10 Units)</h5>
+            <span class="badge bg-warning text-dark">{{ low_stock.count }} Products</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-muted text-uppercase">
+                    <tr>
+                        <th>Product Item</th>
+                        <th>Category</th>
+                        <th>Pack Size</th>
+                        <th>Remaining Stock</th>
+                        <th>Reorder Level</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in low_stock %}
+                    <tr>
+                        <td class="fw-bold text-dark small">
+                            <a href="{% url 'catalogue:product_detail' p.slug %}" target="_blank" class="text-dark text-decoration-none">
+                                {{ p.name }}
+                            </a>
+                        </td>
+                        <td class="small">{{ p.category.name }}</td>
+                        <td class="small">{{ p.unit }}</td>
+                        <td>
+                            {% if p.stock_quantity == 0 %}
+                                <span class="badge bg-danger">0 Units (Out of Stock)</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">{{ p.stock_quantity }} Units Left</span>
+                            {% endif %}
+                        </td>
+                        <td class="small text-muted">{{ p.reorder_level }} Units</td>
+                        <td class="text-center">
+                            <a href="{% url 'dashboard:product_edit' p.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3" style="font-size: 0.75rem;">
+                                Restock Item &rarr;
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">All active products have healthy stock levels!</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 2. Near-Expiry & Expired Alerts -->
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-danger bg-opacity-10 p-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-danger"><i class="bi bi-hourglass-bottom me-2"></i>Near-Expiry &amp; Expired Inventory</h5>
+            <span class="badge bg-danger">{{ expiry_alerts.total_alerts_count }} Total Warnings</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-muted text-uppercase">
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Expiry Date</th>
+                        <th>Urgency Severity</th>
+                        <th>Stock Available</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Already Expired -->
+                    {% for p in expiry_alerts.expired %}
+                    <tr class="table-danger">
+                        <td class="fw-bold text-dark small">{{ p.name }}</td>
+                        <td class="small">{{ p.category.name }}</td>
+                        <td class="small text-danger fw-bold">{{ p.expiry_date|date:"d M Y" }} (Expired)</td>
+                        <td><span class="badge bg-danger">Already Expired - Locked</span></td>
+                        <td>{{ p.stock_quantity }} units</td>
+                        <td class="text-center">
+                            <a href="{% url 'dashboard:product_edit' p.id %}" class="btn btn-sm btn-danger rounded-pill px-3" style="font-size: 0.75rem;">
+                                Remove/Deactivate
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- Critical (1-3 Days) -->
+                    {% for p in expiry_alerts.critical %}
+                    <tr class="table-warning">
+                        <td class="fw-bold text-dark small">{{ p.name }}</td>
+                        <td class="small">{{ p.category.name }}</td>
+                        <td class="small fw-bold">{{ p.expiry_date|date:"d M Y" }} ({{ p.days_to_expiry }}d left)</td>
+                        <td><span class="badge bg-warning text-dark">Critical (1-3 Days)</span></td>
+                        <td>{{ p.stock_quantity }} units</td>
+                        <td class="text-center">
+                            <a href="{% url 'dashboard:expiry_deals_list' %}" class="btn btn-sm btn-warning text-dark rounded-pill px-3" style="font-size: 0.75rem;">
+                                Mark as Rescue Deal
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- Warning (4-7 Days) -->
+                    {% for p in expiry_alerts.warning %}
+                    <tr>
+                        <td class="fw-bold text-dark small">{{ p.name }}</td>
+                        <td class="small">{{ p.category.name }}</td>
+                        <td class="small">{{ p.expiry_date|date:"d M Y" }} ({{ p.days_to_expiry }}d left)</td>
+                        <td><span class="badge bg-info text-white">Warning (4-7 Days)</span></td>
+                        <td>{{ p.stock_quantity }} units</td>
+                        <td class="text-center">
+                            <a href="{% url 'dashboard:expiry_deals_list' %}" class="btn btn-sm btn-outline-info rounded-pill px-3" style="font-size: 0.75rem;">
+                                Monitor / Discount
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    {% if not expiry_alerts.expired and not expiry_alerts.critical and not expiry_alerts.warning %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No near-expiry inventory warnings at this time.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

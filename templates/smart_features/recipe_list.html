@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block title %}Recipe-to-Cart - SmartKart AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header Banner -->
+    <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5 mb-4 text-white" style="background: linear-gradient(135deg, #78350F 0%, #B45309 50%, #D97706 100%);">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-bold mb-2">
+                    <i class="bi bi-egg-fried me-1"></i> Innovative Feature #3
+                </span>
+                <h2 class="display-6 fw-bold mb-2">Recipe-to-Cart Engine</h2>
+                <p class="text-white-50 lead mb-0" style="font-size: 1.05rem;">
+                    Discover authentic Indian &amp; international recipes, dynamically scale ingredient portions for your household, exclude pantry items, and add required groceries to cart in a single click!
+                </p>
+            </div>
+            <div class="col-lg-4 text-end d-none d-lg-block">
+                <i class="bi bi-cup-hot-fill display-1 text-white opacity-25"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="card shadow-sm border-0 rounded-4 p-3 mb-4">
+        <form method="GET" action="{% url 'smart_features:recipe_list' %}" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <select name="diet" class="form-select form-select-sm" onchange="this.form.submit();">
+                    <option value="">All Diet Types</option>
+                    <option value="VEG" {% if selected_diet == 'VEG' %}selected{% endif %}>Vegetarian</option>
+                    <option value="NON_VEG" {% if selected_diet == 'NON_VEG' %}selected{% endif %}>Non-Vegetarian</option>
+                    <option value="VEGAN" {% if selected_diet == 'VEGAN' %}selected{% endif %}>Vegan</option>
+                    <option value="EGG" {% if selected_diet == 'EGG' %}selected{% endif %}>Eggetarian</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="cuisine" class="form-select form-select-sm" onchange="this.form.submit();">
+                    <option value="">All Cuisines</option>
+                    <option value="North Indian" {% if selected_cuisine == 'North Indian' %}selected{% endif %}>North Indian</option>
+                    <option value="South Indian" {% if selected_cuisine == 'South Indian' %}selected{% endif %}>South Indian</option>
+                    <option value="Maharashtrian" {% if selected_cuisine == 'Maharashtrian' %}selected{% endif %}>Maharashtrian</option>
+                    <option value="Italian" {% if selected_cuisine == 'Italian' %}selected{% endif %}>Italian</option>
+                    <option value="Continental" {% if selected_cuisine == 'Continental' %}selected{% endif %}>Continental</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="difficulty" class="form-select form-select-sm" onchange="this.form.submit();">
+                    <option value="">All Difficulties</option>
+                    <option value="EASY" {% if selected_difficulty == 'EASY' %}selected{% endif %}>Easy (&lt; 20m)</option>
+                    <option value="MEDIUM" {% if selected_difficulty == 'MEDIUM' %}selected{% endif %}>Medium (20-45m)</option>
+                    <option value="HARD" {% if selected_difficulty == 'HARD' %}selected{% endif %}>Hard (45m+)</option>
+                </select>
+            </div>
+            <div class="col-md-3 text-end">
+                <a href="{% url 'smart_features:recipe_list' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                    Reset Filters
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Recipes Grid -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-5">
+        {% for recipe in recipes %}
+        <div class="col">
+            <div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden d-flex flex-column">
+                <div class="bg-light d-flex align-items-center justify-content-center p-3 position-relative" style="height: 170px;">
+                    <span class="badge bg-dark bg-opacity-75 position-absolute top-0 start-0 m-3 px-2 py-1 small">
+                        {{ recipe.cuisine }}
+                    </span>
+                    {% if recipe.image %}
+                        <img src="{{ recipe.image.url }}" alt="{{ recipe.name }}" class="img-fluid" style="max-height: 140px; border-radius: 8px; object-fit: cover;">
+                    {% else %}
+                        <span class="sk-emoji sk-emoji-xl" aria-hidden="true">{{ recipe|recipe_emoji }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body p-3 d-flex flex-column flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-success-subtle text-success border border-success-subtle small">
+                            {{ recipe.get_diet_type_display }}
+                        </span>
+                        <span class="text-muted small"><i class="bi bi-clock"></i> {{ recipe.total_time_minutes }} mins</span>
+                    </div>
+
+                    <h5 class="fw-bold text-dark mb-1">{{ recipe.name }}</h5>
+                    <p class="text-secondary small mb-3 flex-grow-1" style="font-size: 0.85rem;">
+                        {{ recipe.description|truncatewords:14 }}
+                    </p>
+
+                    <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-auto">
+                        <span class="text-muted small"><i class="bi bi-people"></i> {{ recipe.base_servings }} Servings</span>
+                        <a href="{% url 'smart_features:recipe_detail' recipe.slug %}" class="btn btn-sm btn-sk-primary rounded-pill px-3 fw-semibold">
+                            Cook &amp; Order &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-egg-fried text-muted display-4"></i>
+            <h4 class="fw-bold mt-3 mb-1">No Recipes Found</h4>
+            <p class="text-muted small">Try clearing your filters to explore all available meal recipes.</p>
+            <a href="{% url 'smart_features:recipe_list' %}" class="btn btn-sk-primary rounded-pill px-4">Reset Filters</a>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}
